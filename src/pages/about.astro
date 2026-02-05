@@ -1,0 +1,48 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SEO from '@/components/SEO.astro';
+
+const title = 'About';
+const description = 'About Manoj Mahalingam - Principal Engineer, Author, and Speaker';
+---
+
+<BaseLayout title={title}>
+  <SEO slot="head" title={title} description={description} />
+
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <article class="prose prose-lg dark:prose-invert mx-auto">
+      <h1>About</h1>
+
+      <div class="my-8">
+        <img src="/images/profile.jpg" alt="Manoj Mahalingam" class="rounded-lg shadow-lg" />
+      </div>
+
+      <p>
+        Manoj Mahalingam is a Principal Engineer at <a href="https://www.avalara.com" target="_blank" rel="noopener noreferrer">Avalara</a>.
+        Previously, he worked with <a href="https://www.indix.com" target="_blank" rel="noopener noreferrer">Indix</a> as a Principal Engineer
+        and with <a href="http://www.thoughtworks.com" target="_blank" rel="noopener noreferrer">ThoughtWorks</a> as a Senior Application Developer.
+      </p>
+
+      <p>
+        Manoj is the author of the book <a href="https://www.packtpub.com/web-development/learning-continuous-integration-teamcity-raw" target="_blank" rel="noopener noreferrer">Learning Continuous Integration with TeamCity</a>
+      </p>
+
+      <p>
+        He codes in <code>Scala</code>, <code>JavaScript</code>, <code>Python</code>, <code>Ruby</code> and <code>C#</code>.
+        He likes to think he knows <code>Haskell</code>, but Maybe he doesn't. He is also extremely fond of PowerShell and is the author
+        of the PowerShell-based build-and-release framework <a href="https://github.com/manojlds/ydeliver" target="_blank" rel="noopener noreferrer">YDeliver</a>.
+      </p>
+
+      <p>
+        He has employed Continuous Integration and Continuous Delivery in a number of projects, ranging across all the major tech stacks.
+        He has also spoken at a number of conferences, including Scale By the Bay, Pycon India and Devopsdays India.
+      </p>
+
+      <p>
+        He can be found answering questions on Stack Overflow at
+        <a href="http://stackoverflow.com/users/526535/manojlds" target="_blank" rel="noopener noreferrer">manojlds</a> and also contributing
+        to a number of projects on <a href="https://github.com/manojlds" target="_blank" rel="noopener noreferrer">GitHub</a>.
+      </p>
+    </article>
+  </div>
+</BaseLayout>
