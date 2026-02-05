@@ -1,0 +1,93 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Card from '@/components/Card.astro';
+import Button from '@/components/Button.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const sortedPosts = allPosts
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 5);
+---
+
+<BaseLayout title="Home">
+  <div class="container py-12 md:py-16 lg:py-24">
+    <div class="flex max-w-[980px] flex-col items-start gap-4">
+      <h1 class="text-4xl font-extrabold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]">
+        StackToHeap
+      </h1>
+      <p class="max-w-[750px] text-lg text-muted-foreground sm:text-xl">
+        No Overflow. A blog about software development, DevOps, and everything in between.
+      </p>
+      <div class="flex gap-4">
+        <Button href="/blog" size="lg">
+          Read the Blog
+        </Button>
+        <Button href="/tags" variant="outline" size="lg">
+          Browse by Tags
+        </Button>
+      </div>
+    </div>
+
+    <div class="mt-16">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-3xl font-bold tracking-tight">Recent Posts</h2>
+        <Button href="/blog" variant="ghost">
+          View all posts →
+        </Button>
+      </div>
+      <div class="grid gap-6">
+        {sortedPosts.map((post) => {
+          const { title, excerpt, date, categories, reading_time } = post.data;
+          const formattedDate = new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }).format(date);
+
+          // Generate the Jekyll-compatible URL
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const slug = post.slug;
+          const url = `/blog/${year}/${month}/${day}/${slug}`;
+
+          return (
+            <Card class="p-6 transition-all hover:shadow-lg">
+              <div class="flex flex-col gap-3">
+                {categories && categories.length > 0 && (
+                  <div class="flex flex-wrap gap-2">
+                    {categories.map((category) => (
+                      <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground">
+                        {category}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <a href={url} class="group">
+                  <h3 class="text-2xl font-bold tracking-tight group-hover:underline">
+                    {title}
+                  </h3>
+                </a>
+                {excerpt && (
+                  <p class="text-muted-foreground line-clamp-2">
+                    {excerpt}
+                  </p>
+                )}
+                <div class="flex items-center gap-3 text-sm text-muted-foreground">
+                  <time datetime={date.toISOString()}>{formattedDate}</time>
+                  {reading_time && (
+                    <>
+                      <span>•</span>
+                      <span>{reading_time}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+</BaseLayout>

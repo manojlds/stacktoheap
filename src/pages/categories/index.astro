@@ -1,0 +1,45 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+
+// Count posts per category
+const categoryCounts = allPosts.reduce((acc, post) => {
+  post.data.categories.forEach((category) => {
+    acc[category] = (acc[category] || 0) + 1;
+  });
+  return acc;
+}, {} as Record<string, number>);
+
+const categories = Object.entries(categoryCounts)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([category, count]) => ({ category, count }));
+---
+
+<BaseLayout title="Categories">
+  <div class="container py-8 md:py-12 lg:py-16">
+    <div class="flex flex-col gap-4 mb-10">
+      <h1 class="text-4xl font-extrabold tracking-tight lg:text-5xl">Categories</h1>
+      <p class="text-xl text-muted-foreground">
+        Browse posts by category.
+      </p>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {categories.map(({ category, count }) => (
+        <a
+          href={`/categories/${category}`}
+          class="group rounded-lg border bg-card p-6 transition-all hover:bg-accent hover:shadow-md"
+        >
+          <h3 class="text-xl font-bold group-hover:text-accent-foreground">
+            {category}
+          </h3>
+          <p class="mt-2 text-sm text-muted-foreground">
+            {count} {count === 1 ? 'post' : 'posts'}
+          </p>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

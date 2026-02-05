@@ -1,0 +1,83 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  excerpt?: string;
+  date: Date;
+  reading_time?: string;
+  categories?: string[];
+  tags?: string[];
+  image?: string;
+}
+
+const { title, excerpt, date, reading_time, categories = [], tags = [], image } = Astro.props;
+
+const formattedDate = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+}).format(date);
+---
+
+<BaseLayout
+  title={title}
+  description={excerpt}
+  image={image}
+  article={true}
+  publishedTime={date}
+  tags={tags}
+>
+  <article class="container py-8 md:py-12 lg:py-16">
+    <div class="mx-auto max-w-3xl">
+      <div class="space-y-4">
+        <div class="flex flex-wrap gap-2">
+          {categories.map((category) => (
+            <a
+              href={`/categories/${category}`}
+              class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            >
+              {category}
+            </a>
+          ))}
+        </div>
+        <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+          {title}
+        </h1>
+        {excerpt && (
+          <p class="text-xl text-muted-foreground">
+            {excerpt}
+          </p>
+        )}
+        <div class="flex items-center gap-4 text-sm text-muted-foreground">
+          <time datetime={date.toISOString()}>{formattedDate}</time>
+          {reading_time && (
+            <>
+              <span>•</span>
+              <span>{reading_time}</span>
+            </>
+          )}
+        </div>
+      </div>
+      <hr class="my-8" />
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <slot />
+      </div>
+      {tags.length > 0 && (
+        <div class="mt-8 pt-8 border-t">
+          <div class="flex flex-wrap gap-2">
+            <span class="text-sm font-medium">Tags:</span>
+            {tags.map((tag) => (
+              <a
+                href={`/tags/${tag}`}
+                class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                {tag}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  </article>
+</BaseLayout>

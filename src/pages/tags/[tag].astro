@@ -1,0 +1,94 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Card from '@/components/Card.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+  const uniqueTags = [...new Set(allPosts.flatMap((post) => post.data.tags))];
+
+  return uniqueTags.map((tag) => {
+    const filteredPosts = allPosts
+      .filter((post) => post.data.tags.includes(tag))
+      .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+    return {
+      params: { tag },
+      props: { posts: filteredPosts, tag },
+    };
+  });
+}
+
+const { posts, tag } = Astro.props;
+---
+
+<BaseLayout title={`Tag: ${tag}`}>
+  <div class="container py-8 md:py-12 lg:py-16">
+    <div class="flex flex-col gap-4 mb-10">
+      <div class="flex items-center gap-2">
+        <a href="/tags" class="text-muted-foreground hover:text-foreground">Tags</a>
+        <span class="text-muted-foreground">/</span>
+        <h1 class="text-4xl font-extrabold tracking-tight">{tag}</h1>
+      </div>
+      <p class="text-xl text-muted-foreground">
+        {posts.length} {posts.length === 1 ? 'post' : 'posts'} tagged with "{tag}".
+      </p>
+    </div>
+
+    <div class="grid gap-6">
+      {posts.map((post) => {
+        const { title, excerpt, date, categories, reading_time } = post.data;
+        const formattedDate = new Intl.DateTimeFormat('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }).format(date);
+
+        // Generate the Jekyll-compatible URL
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const slug = post.slug;
+        const url = `/blog/${year}/${month}/${day}/${slug}`;
+
+        return (
+          <Card class="p-6 transition-all hover:shadow-lg">
+            <div class="flex flex-col gap-3">
+              {categories && categories.length > 0 && (
+                <div class="flex flex-wrap gap-2">
+                  {categories.map((category) => (
+                    <a
+                      href={`/categories/${category}`}
+                      class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    >
+                      {category}
+                    </a>
+                  ))}
+                </div>
+              )}
+              <a href={url} class="group">
+                <h3 class="text-2xl font-bold tracking-tight group-hover:underline">
+                  {title}
+                </h3>
+              </a>
+              {excerpt && (
+                <p class="text-muted-foreground line-clamp-2">
+                  {excerpt}
+                </p>
+              )}
+              <div class="flex items-center gap-3 text-sm text-muted-foreground">
+                <time datetime={date.toISOString()}>{formattedDate}</time>
+                {reading_time && (
+                  <>
+                    <span>•</span>
+                    <span>{reading_time}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  </div>
+</BaseLayout>
