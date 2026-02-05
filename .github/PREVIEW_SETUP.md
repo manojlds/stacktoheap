@@ -2,13 +2,59 @@
 
 This guide will help you set up automated preview deployments for pull requests.
 
-## 🎯 Features
+## 🎯 Two Approaches Available
 
-- ✅ Automatic preview deployment for each PR
-- ✅ Only verified contributors can trigger previews (security)
-- ✅ Preview URL posted as PR comment
-- ✅ Auto-cleanup when PR is closed
-- ✅ Isolated from main site deployment
+### Option A: Simple GitHub Pages Preview (No Setup Required) ✨
+**File:** `.github/workflows/pr-preview-simple.yml`
+- ✅ Works immediately - no configuration needed
+- ✅ Label-triggered (add `deploy-preview` label to PR)
+- ✅ Deploys to existing GitHub Pages
+- ⚠️ Updates live site temporarily
+- 👉 **Recommended for most users**
+
+### Option B: Cloudflare/Netlify (Isolated Previews)
+**File:** `.github/workflows/pr-preview-deploy.yml`
+- ✅ Separate preview URLs (doesn't affect live site)
+- ✅ Multiple concurrent previews
+- ✅ Auto-cleanup when PR closes
+- ⚠️ Requires external service setup (5-10 minutes)
+
+---
+
+## Quick Start: Simple Preview (Option A)
+
+### How It Works
+
+1. Open a pull request
+2. Add the `deploy-preview` label to the PR
+3. Wait ~2 minutes for deployment
+4. Test changes on the live site
+5. Merge PR when ready
+
+### Usage
+
+**Via GitHub CLI:**
+```bash
+gh pr edit <PR-NUMBER> --add-label deploy-preview
+```
+
+**Via GitHub UI:**
+1. Go to your PR
+2. Click "Labels" on the right sidebar
+3. Select or create `deploy-preview` label
+
+### ⚠️ Important Notes
+
+- This deploys to your **live site** at `https://manojlds.github.io/stacktoheap/`
+- Only one preview at a time (GitHub Pages limitation)
+- To restore main site: merge the PR or push new commits to `main`
+- Perfect for solo projects or quick testing
+
+---
+
+## Advanced Setup: Cloudflare/Netlify (Option B)
+
+If you need isolated previews that don't affect your live site:
 
 ## 🔒 Security
 
