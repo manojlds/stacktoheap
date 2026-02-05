@@ -86,10 +86,21 @@ The site automatically deploys to GitHub Pages when pushed to the `main` branch 
 - **Deploy** - Builds and deploys to GitHub Pages on push to `main`
 - **CI** - Runs type checking, linting, and build validation on PRs
 - **PR Preview** - Posts build statistics on pull requests
+- **PR Preview Deploy** - Automatic preview deployments for verified contributors (requires setup)
 - **Dependency Review** - Scans dependencies for security issues
 - **CodeQL** - Automated security code scanning
 
 See [.github/WORKFLOWS.md](./.github/WORKFLOWS.md) for detailed workflow documentation.
+
+#### Setting Up PR Previews
+
+To enable automatic preview deployments for pull requests:
+1. Follow the setup guide in [.github/PREVIEW_SETUP.md](./.github/PREVIEW_SETUP.md)
+2. Choose a platform: Cloudflare Pages (recommended), Netlify, or Vercel
+3. Add required secrets to GitHub
+4. Preview URLs will be posted automatically on PRs from verified contributors
+
+**Security:** Only repository contributors can trigger preview deployments. PRs from forks are blocked for security.
 
 See [MIGRATION.md](./MIGRATION.md) for more details about the Jekyll to Astro migration.
 
