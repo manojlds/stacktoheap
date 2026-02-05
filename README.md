@@ -1,5 +1,9 @@
 # StackToHeap
 
+[![Deploy](https://github.com/manojlds/stacktoheap/actions/workflows/deploy.yml/badge.svg)](https://github.com/manojlds/stacktoheap/actions/workflows/deploy.yml)
+[![CI](https://github.com/manojlds/stacktoheap/actions/workflows/ci.yml/badge.svg)](https://github.com/manojlds/stacktoheap/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/manojlds/stacktoheap/actions/workflows/codeql.yml/badge.svg)](https://github.com/manojlds/stacktoheap/actions/workflows/codeql.yml)
+
 **No Overflow** - A technical blog about software development, DevOps, and technology.
 
 This is the Astro-powered version of StackToHeap, migrated from Jekyll for better performance and modern development experience.
@@ -76,6 +80,16 @@ Your content here...
 ## 🚢 Deployment
 
 The site automatically deploys to GitHub Pages when pushed to the `main` branch via GitHub Actions.
+
+### GitHub Workflows
+
+- **Deploy** - Builds and deploys to GitHub Pages on push to `main`
+- **CI** - Runs type checking, linting, and build validation on PRs
+- **PR Preview** - Posts build statistics on pull requests
+- **Dependency Review** - Scans dependencies for security issues
+- **CodeQL** - Automated security code scanning
+
+See [.github/WORKFLOWS.md](./.github/WORKFLOWS.md) for detailed workflow documentation.
 
 See [MIGRATION.md](./MIGRATION.md) for more details about the Jekyll to Astro migration.
 
