@@ -1,11 +1,13 @@
 ---
 import { cn } from '@/lib/utils';
 
+const base = import.meta.env.BASE_URL;
+
 const navItems = [
-  { name: 'Home', href: '/' },
-  { name: 'Blog', href: '/blog' },
-  { name: 'Tags', href: '/tags' },
-  { name: 'Categories', href: '/categories' },
+  { name: 'Home', href: base + '/' },
+  { name: 'Blog', href: base + '/blog' },
+  { name: 'Tags', href: base + '/tags' },
+  { name: 'Categories', href: base + '/categories' },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -14,7 +16,7 @@ const currentPath = Astro.url.pathname;
 <header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
   <div class="container flex h-16 items-center">
     <div class="mr-4 flex">
-      <a href="/" class="mr-6 flex items-center space-x-2">
+      <a href={base + '/'} class="mr-6 flex items-center space-x-2">
         <span class="text-xl font-bold">StackToHeap</span>
       </a>
       <nav class="hidden md:flex items-center space-x-6 text-sm font-medium">

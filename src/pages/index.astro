@@ -4,6 +4,8 @@ import Card from '@/components/Card.astro';
 import Button from '@/components/Button.astro';
 import { getCollection } from 'astro:content';
 
+const base = import.meta.env.BASE_URL;
+
 const allPosts = await getCollection('blog', ({ data }) => !data.draft);
 const sortedPosts = allPosts
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
@@ -20,10 +22,10 @@ const sortedPosts = allPosts
         No Overflow. A blog about software development, DevOps, and everything in between.
       </p>
       <div class="flex gap-4">
-        <Button href="/blog" size="lg">
+        <Button href={base + '/blog'} size="lg">
           Read the Blog
         </Button>
-        <Button href="/tags" variant="outline" size="lg">
+        <Button href={base + '/tags'} variant="outline" size="lg">
           Browse by Tags
         </Button>
       </div>
@@ -32,7 +34,7 @@ const sortedPosts = allPosts
     <div class="mt-16">
       <div class="flex items-center justify-between mb-8">
         <h2 class="text-3xl font-bold tracking-tight">Recent Posts</h2>
-        <Button href="/blog" variant="ghost">
+        <Button href={base + '/blog'} variant="ghost">
           View all posts →
         </Button>
       </div>
@@ -50,7 +52,7 @@ const sortedPosts = allPosts
           const month = String(date.getMonth() + 1).padStart(2, '0');
           const day = String(date.getDate()).padStart(2, '0');
           const slug = post.slug;
-          const url = `/blog/${year}/${month}/${day}/${slug}`;
+          const url = `${base}/blog/${year}/${month}/${day}/${slug}`;
 
           return (
             <Card class="p-6 transition-all hover:shadow-lg">
