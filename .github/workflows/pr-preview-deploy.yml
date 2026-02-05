@@ -52,28 +52,40 @@ jobs:
     needs: check-contributor
     if: needs.check-contributor.outputs.is-contributor == 'true' && github.event.action != 'closed'
     runs-on: ubuntu-latest
-    environment:
-      name: pr-preview-${{ github.event.pull_request.number }}
-      url: ${{ steps.deploy.outputs.url }}
     steps:
+      - name: Check if secrets are configured
+        id: check-secrets
+        run: |
+          if [[ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]]; then
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "::warning::Cloudflare secrets not configured. See .github/PREVIEW_SETUP.md for setup instructions."
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout repository
+        if: steps.check-secrets.outputs.configured == 'true'
         uses: actions/checkout@v4
 
       - name: Setup Node.js
+        if: steps.check-secrets.outputs.configured == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
+        if: steps.check-secrets.outputs.configured == 'true'
         run: npm ci
 
       - name: Build site for preview
+        if: steps.check-secrets.outputs.configured == 'true'
         run: npm run build
         env:
           NODE_ENV: production
 
       - name: Deploy to Cloudflare Pages
+        if: steps.check-secrets.outputs.configured == 'true'
         id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
@@ -82,6 +94,7 @@ jobs:
           command: pages deploy dist --project-name=stacktoheap-preview --branch=pr-${{ github.event.pull_request.number }}
 
       - name: Comment Preview URL
+        if: steps.check-secrets.outputs.configured == 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -110,7 +123,72 @@ jobs:
 
             const botComment = comments.find(comment =>
               comment.user.type === 'Bot' &&
-              comment.body.includes('Preview Deployment Ready')
+              comment.body.includes('Preview Deployment')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: body
+              });
+            }
+
+      - name: Comment setup needed
+        if: steps.check-secrets.outputs.configured == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.issue.number;
+
+            const body = `## ⚙️ Preview Deployment Not Configured
+
+            Preview deployments are available but need to be set up first.
+
+            ### 🛠️ Quick Setup (5 minutes)
+
+            To enable automatic preview deployments for this and future PRs:
+
+            1. **Choose a platform:**
+               - [Cloudflare Pages](https://pages.cloudflare.com) (Recommended - unlimited free)
+               - [Netlify](https://netlify.com) (Alternative - 100GB/month free)
+               - [Vercel](https://vercel.com) (Alternative)
+
+            2. **Follow the setup guide:**
+               See [\`.github/PREVIEW_SETUP.md\`](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/.github/PREVIEW_SETUP.md) for detailed instructions
+
+            3. **Add secrets to GitHub:**
+               - Go to Settings → Secrets → Actions
+               - Add the required API tokens
+
+            Once configured, preview URLs will be posted automatically on all PRs from verified contributors!
+
+            ### 📦 Manual Preview
+
+            You can manually preview this PR by:
+            1. Checking out this branch
+            2. Running \`npm install && npm run build && npm run preview\`
+
+            <sub>This message will not appear once preview deployments are configured.</sub>`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Preview Deployment')
             );
 
             if (botComment) {
