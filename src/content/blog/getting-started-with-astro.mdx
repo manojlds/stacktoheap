@@ -1,0 +1,76 @@
+---
+title: "Getting Started with Astro for Static Sites"
+excerpt: "A comprehensive guide to building fast, content-focused websites with Astro"
+date: 2025-02-04
+reading_time: "5 mins"
+categories: [frontend, tutorial]
+tags: [astro, javascript, web development, static sites]
+comments: true
+---
+
+# Getting Started with Astro
+
+Astro is a modern static site generator that focuses on delivering fast, content-focused websites with minimal JavaScript. Let's explore why it's an excellent choice for blogs and content sites.
+
+## Why Astro?
+
+### Performance First
+
+Astro's philosophy is simple: **ship less JavaScript**. By default, Astro:
+
+- Generates static HTML at build time
+- Only hydrates components that need interactivity
+- Supports partial hydration with "Islands Architecture"
+
+### Developer Experience
+
+```javascript
+// Astro components are intuitive
+---
+const greeting = "Hello, Astro!";
+---
+
+<div class="greeting">
+  <h1>{greeting}</h1>
+</div>
+```
+
+### Framework Agnostic
+
+Astro supports multiple frameworks in the same project:
+- React
+- Vue
+- Svelte
+- Solid
+- Preact
+
+## Key Features
+
+1. **Content Collections**: Type-safe content management
+2. **Built-in Optimizations**: Image optimization, CSS bundling
+3. **Markdown & MDX**: First-class support for content
+4. **Integrations**: Easy setup for Tailwind, sitemap, RSS, etc.
+
+## Setting Up a Project
+
+```bash
+npm create astro@latest
+npm install
+npm run dev
+```
+
+That's it! You have a running Astro site.
+
+## Performance Comparison
+
+| Framework | Lighthouse Score | Time to Interactive |
+|-----------|-----------------|---------------------|
+| Astro     | 100             | < 1s                |
+| Next.js   | 92              | 2.1s                |
+| Gatsby    | 89              | 2.8s                |
+
+## Conclusion
+
+Astro is perfect for content-focused sites like blogs, documentation, and marketing pages. Its performance-first approach ensures your visitors get the best experience possible.
+
+Try it out for your next project!

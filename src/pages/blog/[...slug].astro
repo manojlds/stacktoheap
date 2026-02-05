@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import BlogPost from '@/layouts/BlogPost.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+
+  return posts.map((post) => {
+    const { date } = post.data;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const slug = post.slug;
+
+    return {
+      params: { slug: `${year}/${month}/${day}/${slug}` },
+      props: { post },
+    };
+  });
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+const { title, excerpt, date, reading_time, categories, tags, image } = post.data;
+---
+
+<BlogPost
+  title={title}
+  excerpt={excerpt}
+  date={date}
+  reading_time={reading_time}
+  categories={categories}
+  tags={tags}
+  image={image}
+>
+  <Content />
+</BlogPost>
