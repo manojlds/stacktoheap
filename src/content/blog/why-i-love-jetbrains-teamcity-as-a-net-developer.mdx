@@ -14,11 +14,11 @@ What makes it even better is the amazing support for .NET. I find other tools se
 
 **TeamCity Powershell Runner** - Next comes the Powershell runner. While you can easily run any custom command from TeamCity, and hence can run powershell script and commands, having a runner for it makes for quick and easy setup.
 
-![TeamcityPowershell](/images/teamcity-powershell.png)
+![TeamcityPowershell](/stacktoheap/images/teamcity-powershell.png)
 
 Again, the runner is not a simple task that would just call Powershell and lets you specify a file that you want to run. You can specify if you want to use the 32-bit or 64-bit console. You can can specify a path to a file or specify the powershell source itself directly ( when you do the latter, you can also reference teamcity properties and those will be directly substituted in the source.) You can specify if the script is to be executed with Powershell by passing the `-File` option or by using the `-Command` option and pass in the script through stdin. Effectively, the runner covers all scenarios that you may want to use Powershell with. The setup is easy, clear and powerful.
 
-![TeamCityRunners](/images/teamcity-runners.PNG)
+![TeamCityRunners](/stacktoheap/images/teamcity-runners.PNG)
 
 **Other .NET specific runners** - Teamcity has the whole set of .NET tools covered in form of runners. I can see myself using Nuget Package and Installer tasks for quickly setting up packaging and also installing nuget packages in the builds of my OSS projects. I am kind of against having such tasks handled by the CI server as that would tie you to the specific CI server and the way you build on local dev box would be different from what you do on the CI server. It is better to have them in your buildscripts. But for my pet projects, I can quickly boostrap the CI by using these runners.
 

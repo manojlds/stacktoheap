@@ -16,7 +16,7 @@ const siteUrl = 'https://stacktoheap.com';
 
 const fullTitle = title ? `${title} | ${siteTitle}` : `${siteTitle} - ${siteDescription}`;
 const metaDescription = description || siteDescription;
-const metaImage = image ? `${siteUrl}/images/${image}` : `${siteUrl}/images/default-og.png`;
+const metaImage = image ? `${siteUrl}/stacktoheap/images/${image}` : `${siteUrl}/stacktoheap/images/default-og.png`;
 const canonicalURL = new URL(Astro.url.pathname, siteUrl);
 ---
 
@@ -52,4 +52,4 @@ const canonicalURL = new URL(Astro.url.pathname, siteUrl);
 <meta name="twitter:creator" content="@manojlds" />
 
 <!-- Favicon -->
-<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="icon" type="image/x-icon" href="/stacktoheap/favicon.ico" />
