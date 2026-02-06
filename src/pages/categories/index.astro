@@ -2,8 +2,6 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 
-const base = import.meta.env.BASE_URL;
-
 const allPosts = await getCollection('blog', ({ data }) => !data.draft);
 
 // Count posts per category
@@ -31,7 +29,7 @@ const categories = Object.entries(categoryCounts)
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {categories.map(({ category, count }) => (
         <a
-          href={`${base}/categories/${category}`}
+          href={`/categories/${category}`}
           class="group rounded-lg border bg-card p-6 transition-all hover:bg-accent hover:shadow-md"
         >
           <h3 class="text-xl font-bold group-hover:text-accent-foreground">
