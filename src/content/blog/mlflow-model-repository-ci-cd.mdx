@@ -19,7 +19,7 @@ We see a model repository as being similar to other artifact repositories like M
 
 MLFlow is a complete end-to-end machine learning lifecycle platform. The missing piece in our internal ML Platform has been the model repository and MLFlow fit in pretty well. For this purpose we utilize the MLFlow Tracking API and the UI to track our `experiments` and the different `runs` within them as we iterate on the models.
 
-![mlflow-ui](/stacktoheap/images/mlflow-ui.png)
+![mlflow-ui](/images/mlflow-ui.png)
 
 ## MLFlow integration with GoCD
 
@@ -27,7 +27,7 @@ Our CI/CD process involves taking builds out of promoted models and performing t
 
 At every stage, it is essential that it is possible to track back to the model version being used and even the training data and hyperparams used to build the said model. MLFLow makes it easy to track all the inputs and outputs of each and every model building process. GoCD, the open source CI/CD tool from ThoughtWorks makes it trivial to track artifacts as they flow through various CD pipelines. It was a no-brainer that we ended up integrating MLFlow as a package repository in GoCD so that a model deployed in production can be traced back to its corresponding run all the way back to MLFlow.
 
-![mlflow-vsm](/stacktoheap/images/mlflow-vsm.png)
+![mlflow-vsm](/images/mlflow-vsm.png)
 
 A run within an experiment that is deemed to be production ready is tagged with a "promote" tag and any time a model is promoted, a new build is triggered on GoCD just like how a new commit to Git triggers a new build.
 

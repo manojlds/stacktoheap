@@ -35,7 +35,7 @@ public class NewItemParameters
 }
 ```
 
-![NewItemDynamicParameters](/stacktoheap/images/pitnewitem.PNG)
+![NewItemDynamicParameters](/images/pitnewitem.PNG)
 
 In the `NewItemDynamicParameters` we simple return an instance of `NewItemParameters`. As shown above, `NewItemParameters` defines the parameters as properties - in this case just one - that are marked by the `Parameter` attribute. Additional details like whether the parameter is mandatory or not can be provided with the attribute. In this case `RepoPath` is a mandatory string parameter to New-Item. We can now build and verify that `New-Item` does require a `RepoPath` parameter when trying to create an item under `git:\`. Even tab completion works as expected.
 

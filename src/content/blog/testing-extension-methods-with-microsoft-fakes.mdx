@@ -10,7 +10,7 @@ Testing static methods, or to be more specific, extensions methods is imposssibl
 
 I did come across [Microsoft Fakes](http://msdn.microsoft.com/en-us/library/hh549175.aspx) that is available with Visual Studio 2012. It is built on top of ( and to replace ) Microsoft Moles that was available previously. In a project that I was writing, the simplest design was in using extension methods ( which, in C#, are effectively static methods). Testing them posed a problem. This was a good time as any to try out Microsoft Fakes.
 
-![MicrosoftFakes](/stacktoheap/images/fakes.PNG)
+![MicrosoftFakes](/images/fakes.PNG)
 
 Starting with the framework was pretty simple. Add the fake assembly for the assembly to be "shimmed" in the Test Project. Using Visual Studio Ultimate ( which is required) you can just right click on the assembly reference and click on "Add Fakes assembly." This creates and adds a reference to the fake assembly.
 

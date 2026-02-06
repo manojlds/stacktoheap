@@ -52,7 +52,7 @@ public class Pit : PSSnapIn
 
 The `RunInstaller` attribute is required to register the snap-in using InstallUtil.
 
-![powershellsnapin](/stacktoheap/images/pssnapin.png)
+![powershellsnapin](/images/pssnapin.png)
 
 After building the project, we can register the snap-in in Powershell. For registering, as mentioned above, we make use of InstallUtil. For 64-bit and .Net Framework 4, you want to run the InstallUtil.exe located at `%systemroot%\Microsoft.NET\Framework64\v4.0.30319\installutil.exe`. Just pass in the path to the built assembly and the snap-in will be registered in Powershell ( might need an elevated prompt.) You may also add a post-build event to your project with: `%systemroot%\Microsoft.NET\Framework64\v4.0.30319\installutil.exe $(TargetPath)`
 

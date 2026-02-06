@@ -63,7 +63,7 @@ Next, you have to add a property that the target imported from the `RazorGenerat
 
 `PrecompileRazorFiles` is the property being added and I have added it just below `MvcBuildViews` in the csproj for obvious reasons.
 
-![RazorPrecompilationError](/stacktoheap/images/razor_precompile_error.png)
+![RazorPrecompilationError](/images/razor_precompile_error.png)
 
 That's it! You can now build your application and the views will be precompiled. Try introducing a compile error in one of your razor views and you should get the error when compiling your solution. The precompiled files will be generated under `obj\CodeGen`.
 
