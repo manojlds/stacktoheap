@@ -5,8 +5,8 @@ import tailwind from '@astrojs/tailwind';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://stacktoheap.com',
-  base: '/',
+  site: 'https://manojlds.github.io',
+  base: '/stacktoheap',
   integrations: [
     mdx(),
     sitemap(),
