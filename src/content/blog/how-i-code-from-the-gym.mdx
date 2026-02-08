@@ -1,0 +1,180 @@
+---
+title: "How I code from the gym"
+excerpt: "My setup for coding from anywhere: running OpenCode Web on Ubuntu as a systemd service and securely connecting from my phone with Tailscale."
+date: 2026-02-08
+reading_time: 6 mins
+categories: [ai, productivity, devops]
+tags: [opencode, opencode-web, tailscale, systemd, ubuntu, remote-work]
+comments: true
+---
+
+I like the idea of coding in small pockets of time, even when I am not at my desk. One of my favorite workflows lately is doing lightweight coding sessions from the gym between sets, while waiting at school pickup, or during my daughter's swimming classes using my phone.
+
+This sounds a little ridiculous until you have a setup that is actually smooth:
+
+- OpenCode Web runs on my Ubuntu box at home.
+- It starts automatically as a systemd service.
+- My phone reaches it over Tailscale, so I do not need to expose random ports to the public internet.
+
+Once this is set up, I can open the OpenCode Web interface from my phone browser, review code, queue changes, run small fixes, and keep momentum going while away from my main machine.
+
+# Why this works for me
+
+This is the Switch moment for coding for me.
+
+My gaming time went up after I got a Nintendo Switch because I could play in short bursts: in bed, while traveling, or while my daughter is watching TV. OpenCode Web gives me the same shift for coding.
+
+Most of what I want to build happens outside normal work hours: side projects, open source contributions, trying new tools, and exploring unfamiliar codebases. This setup removes the "I need a full desk setup first" friction and lets me keep momentum from anywhere.
+
+![OpenCode on phone beside Nintendo Switch](/images/opencode-switch-moment-placeholder.jpeg)
+
+Because OpenCode is built around a server/client model, the heavy lifting stays on my always-on Ubuntu machine while my phone acts as a lightweight client. That makes coding feel portable, so I can chip away at side projects whenever I have a gap and move between multiple projects without a full laptop setup.
+
+I am not limited to tiny edits on mobile. With OpenCode's server/client model, I can plan and execute full project work while agents handle large parts of implementation on my Ubuntu machine.
+
+The advantage of short sessions is timing. When a feature idea appears at the gym, at school pickup, or during swim class, I can immediately plan it and start execution. Back at my desk, I do final review, full test runs, and release polish. In short sessions, I usually:
+
+- create or refine a feature plan for an active project
+- ask the coding agent to implement a scoped chunk
+- review generated diffs and leave follow-up instructions
+- capture docs/notes while the context is fresh
+
+The phone is just the control surface. The real work happens on a machine with proper compute, full repo access, and my existing toolchain.
+
+# Running OpenCode Web as a systemd service (Ubuntu)
+
+The most important part of this setup is reliability. If the web UI is down whenever I leave my laptop, the whole workflow falls apart. I use a user-level systemd service so OpenCode runs in the background and comes back automatically.
+
+## 1) Find your OpenCode binary
+
+```bash
+which opencode
+```
+
+Copy that path. You will use it in `ExecStart`.
+
+## 2) Create a user systemd service
+
+```bash
+mkdir -p ~/.config/systemd/user
+```
+
+Create `~/.config/systemd/user/opencode-web.service`:
+
+```ini
+[Unit]
+Description=OpenCode Web Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h
+ExecStart=/path/to/opencode web --port 4096 --hostname 0.0.0.0
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+Replace `/path/to/opencode` with the output from `which opencode`.
+
+## 3) Keep it running after logout
+
+```bash
+loginctl enable-linger $USER
+```
+
+## 4) Enable and start
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable opencode-web
+systemctl --user start opencode-web
+```
+
+## 5) Verify health and logs
+
+```bash
+curl http://localhost:4096/global/health
+systemctl --user status opencode-web
+journalctl --user -u opencode-web -f
+```
+
+Expected health response looks like:
+
+```json
+{"healthy":true,"version":"x.x.x"}
+```
+
+Once this is up, you can also attach from terminal with:
+
+```bash
+opencode attach http://localhost:4096
+```
+
+![OpenCode Web on Desktop](/images/opencode_web_desktop.png)
+
+
+# Private access from phone using Tailscale
+
+Now for the connectivity piece.
+
+I install Tailscale on both:
+
+- the Ubuntu machine running OpenCode Web
+- my phone
+
+After both are on the same tailnet, my phone can reach the Ubuntu box via its Tailscale IP or MagicDNS name.
+
+For example:
+
+```txt
+http://100.x.y.z:4096
+```
+
+or
+
+```txt
+http://ubuntu-box.tailnet-name.ts.net:4096
+```
+
+![OpenCode Web on Phone](/images/opencode_phone.jpeg)
+
+Because traffic stays inside Tailscale, I do not need to open this port publicly on my router.
+
+# Alternatives I use sometimes
+
+I also use hosted agent workflows now and then, especially when I want to kick off work quickly from a browser tab:
+
+- [OpenAI Codex Web](https://chatgpt.com/codex)
+- [Claude Code Web](https://claude.ai/code)
+- [Google Jules](https://jules.google)
+
+These are genuinely useful, and I do use them. But for my day-to-day side-project workflow, they still have trade-offs compared to running OpenCode on my own machine:
+
+- speed can vary depending on queue/load and remote environment startup
+- workflow can feel different from my normal desk setup
+- limited end-to-end UI testing in the exact environment I use locally
+- no direct access to all of my local environment secrets and machine-specific tooling
+- product-specific quirks; for example, in my Codex usage, committing binary assets like images/icons is still not smooth
+
+So I treat hosted agents as great supplements, while self-hosted OpenCode remains my default for continuity with the way I already build at my desk.
+
+One limitation of this approach is that I cannot use other harnesses like Claude Code, Codex, Amp etc and I always like to keep switching them to see how they all perform on my tasks so that I can be up-to-date on how the tools are evolving. But there's been a new addition that possibly solves this, so look for a part 2 of this post!
+
+# What surprised me
+
+The biggest win is not speed. It is continuity.
+
+When I can capture ideas immediately and turn them into commits (or nearly-finished diffs), I lose less context and finish more tasks during the week. I still do heavy implementation at a real desk, but these small remote sessions are excellent for momentum.
+
+If you already run a homelab or an always-on dev box, this setup takes very little effort and pays off quickly.
+
+# Closing thoughts
+
+Coding from the gym is not about replacing deep work blocks. It is about using dead time well.
+
+OpenCode Web + systemd + Tailscale gives me a reliable, secure, low-friction way to keep moving on code from anywhere. Once it is running, my phone becomes a surprisingly capable remote cockpit for coding agents.
+
+The Switch moment for coding is here and I am all up for it!
