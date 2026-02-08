@@ -11,9 +11,10 @@ interface Props {
   article?: boolean;
   publishedTime?: Date;
   tags?: string[];
+  categories?: string[];
 }
 
-const { title, description, image, article, publishedTime, tags } = Astro.props;
+const { title, description, image, article, publishedTime, tags, categories } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -26,6 +27,7 @@ const { title, description, image, article, publishedTime, tags } = Astro.props;
       article={article}
       publishedTime={publishedTime}
       tags={tags}
+      categories={categories}
     />
   </head>
   <body>
