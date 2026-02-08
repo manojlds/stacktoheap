@@ -31,6 +31,34 @@ export default {
             },
           },
         },
+        lg: {
+          css: {
+            h1: {
+              fontSize: '1.75rem',
+              marginTop: '2.5rem',
+              marginBottom: '1rem',
+              fontWeight: '700',
+            },
+            h2: {
+              fontSize: '1.375rem',
+              marginTop: '2rem',
+              marginBottom: '0.75rem',
+              fontWeight: '600',
+            },
+            h3: {
+              fontSize: '1.175rem',
+              marginTop: '1.75rem',
+              marginBottom: '0.5rem',
+              fontWeight: '600',
+            },
+            h4: {
+              fontSize: '1.05rem',
+              marginTop: '1.5rem',
+              marginBottom: '0.5rem',
+              fontWeight: '600',
+            },
+          },
+        },
       },
     },
   },
