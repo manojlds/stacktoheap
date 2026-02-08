@@ -14,7 +14,7 @@ const currentPath = Astro.url.pathname;
 
 <header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
   <div class="container flex h-16 items-center">
-    <div class="mr-4 flex">
+    <div class="mr-4 flex items-center">
       <a href="/" class="mr-6 flex items-center space-x-2">
         <span class="text-xl font-bold">StackToHeap</span>
       </a>
@@ -62,7 +62,61 @@ const currentPath = Astro.url.pathname;
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
           </svg>
         </a>
+        <a
+          href="/rss.xml"
+          class="text-foreground/60 hover:text-foreground/80 transition-colors"
+          aria-label="RSS Feed"
+        >
+          <span class="sr-only">RSS</span>
+          <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/>
+          </svg>
+        </a>
+        <button
+          id="mobile-menu-button"
+          class="md:hidden inline-flex items-center justify-center rounded-md p-2 text-foreground/60 hover:text-foreground/80 transition-colors"
+          aria-label="Toggle menu"
+          aria-expanded="false"
+        >
+          <svg class="h-5 w-5" id="menu-icon-open" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+          <svg class="h-5 w-5 hidden" id="menu-icon-close" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </nav>
     </div>
   </div>
+  <nav id="mobile-menu" class="hidden md:hidden border-t">
+    <div class="container py-4 flex flex-col space-y-3">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class={cn(
+            'text-sm font-medium transition-colors hover:text-foreground/80 px-2 py-1',
+            currentPath === item.href || currentPath.startsWith(item.href + '/')
+              ? 'text-foreground'
+              : 'text-foreground/60'
+          )}
+        >
+          {item.name}
+        </a>
+      ))}
+    </div>
+  </nav>
 </header>
+
+<script>
+  const button = document.getElementById('mobile-menu-button');
+  const menu = document.getElementById('mobile-menu');
+  const iconOpen = document.getElementById('menu-icon-open');
+  const iconClose = document.getElementById('menu-icon-close');
+
+  button?.addEventListener('click', () => {
+    const isOpen = menu?.classList.toggle('hidden') === false;
+    iconOpen?.classList.toggle('hidden', isOpen);
+    iconClose?.classList.toggle('hidden', !isOpen);
+    button.setAttribute('aria-expanded', String(isOpen));
+  });
+</script>
