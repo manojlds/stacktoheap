@@ -27,6 +27,7 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
   article={true}
   publishedTime={date}
   tags={tags}
+  categories={categories}
 >
   <article class="container py-8 md:py-12 lg:py-16">
     <div class="mx-auto max-w-3xl">
@@ -41,7 +42,7 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
             </a>
           ))}
         </div>
-        <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+        <h1 class="scroll-m-20 text-3xl font-extrabold tracking-tight md:text-4xl">
           {title}
         </h1>
         {excerpt && (
