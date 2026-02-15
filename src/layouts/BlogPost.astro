@@ -61,9 +61,19 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
         </div>
       </div>
       <hr class="my-8" />
-      <div class="prose prose-lg dark:prose-invert max-w-none">
+      <div class="prose prose-lg dark:prose-invert max-w-none prose-img:max-h-[400px] prose-img:w-auto prose-img:mx-auto prose-img:cursor-zoom-in prose-img:rounded-lg prose-img:border prose-img:border-border">
         <slot />
       </div>
+
+      <!-- Lightbox modal -->
+      <dialog id="image-lightbox" class="fixed inset-0 z-50 m-0 h-screen w-screen max-h-none max-w-none bg-transparent p-0 backdrop:bg-black/80">
+        <div class="flex h-full w-full items-center justify-center p-4" id="lightbox-backdrop">
+          <div class="relative max-h-[90vh] max-w-[90vw]">
+            <img id="lightbox-img" src="" alt="" class="max-h-[90vh] max-w-[90vw] rounded-lg object-contain" />
+            <p id="lightbox-caption" class="mt-2 text-center text-sm text-white/80"></p>
+          </div>
+        </div>
+      </dialog>
       {tags.length > 0 && (
         <div class="mt-8 pt-8 border-t">
           <div class="flex flex-wrap gap-2">
@@ -81,4 +91,38 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
       )}
     </div>
   </article>
+
+  <script>
+    const dialog = document.getElementById('image-lightbox') as HTMLDialogElement;
+    const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
+    const lightboxCaption = document.getElementById('lightbox-caption') as HTMLParagraphElement;
+    const backdrop = document.getElementById('lightbox-backdrop') as HTMLDivElement;
+
+    // Attach click handler to all images in the prose area and BlogImage figures
+    document.querySelectorAll('.prose img, .blog-image img').forEach((img) => {
+      const imgEl = img as HTMLImageElement;
+      imgEl.addEventListener('click', () => {
+        lightboxImg.src = imgEl.src;
+        lightboxImg.alt = imgEl.alt;
+
+        // Check for caption from figcaption sibling
+        const figure = imgEl.closest('figure');
+        const caption = figure?.querySelector('figcaption')?.textContent || '';
+        lightboxCaption.textContent = caption;
+        lightboxCaption.style.display = caption ? '' : 'none';
+
+        dialog.showModal();
+      });
+    });
+
+    // Close on backdrop click
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) {
+        dialog.close();
+      }
+    });
+
+    // Close on Escape (native dialog behavior) and image click
+    lightboxImg.addEventListener('click', () => dialog.close());
+  </script>
 </BaseLayout>
