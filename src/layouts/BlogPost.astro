@@ -8,10 +8,10 @@ interface Props {
   reading_time?: string;
   categories?: string[];
   tags?: string[];
-  image?: string;
+  hero_image?: string;
 }
 
-const { title, excerpt, date, reading_time, categories = [], tags = [], image } = Astro.props;
+const { title, excerpt, date, reading_time, categories = [], tags = [], hero_image } = Astro.props;
 
 const formattedDate = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
@@ -23,7 +23,7 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
 <BaseLayout
   title={title}
   description={excerpt}
-  image={image}
+  image={hero_image}
   article={true}
   publishedTime={date}
   tags={tags}
@@ -60,6 +60,16 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
           )}
         </div>
       </div>
+      {hero_image && (
+        <div class="my-8">
+          <img
+            src={hero_image}
+            alt={title}
+            class="w-full rounded-lg border border-border"
+            loading="eager"
+          />
+        </div>
+      )}
       <hr class="my-8" />
       <div class="prose prose-lg dark:prose-invert max-w-none prose-img:max-h-[400px] prose-img:w-auto prose-img:mx-auto prose-img:cursor-zoom-in prose-img:rounded-lg prose-img:border prose-img:border-border">
         <slot />

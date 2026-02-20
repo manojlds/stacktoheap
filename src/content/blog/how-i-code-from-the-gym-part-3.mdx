@@ -1,0 +1,249 @@
+---
+title: "How I code from the gym — Part 3: How my agents code when I am at the gym"
+excerpt: "The real unlock from running AI tools on my desktop wasn't convenience — it was the ability to let autonomous agents work through entire features while I am away. Enter the Ralph loop."
+date: 2026-02-20
+reading_time: 8 mins
+categories: [ai, productivity, devops]
+tags: [amp, claude-code, ralph, autonomous-agents, vaibhav, tmux, remote-work]
+hero_image: /images/gym-coding-part3-hero.png
+comments: true
+---
+
+In [Part 1](/blog/how-i-code-from-the-gym), I set up OpenCode Web on my Ubuntu desktop so I could code from my phone between sets at the gym. In [Part 2](/blog/how-i-code-from-the-gym-part-2), I broke free from a single tool — using SSH, tmux, and a session manager called [vaibhav](https://github.com/manojlds/vaibhav), I could run Amp, Claude Code, Codex, or any terminal AI tool from my phone with one command.
+
+But here is the thing I did not fully appreciate when writing those posts: the real unlock was not "I can use any AI tool from my phone." The real unlock was that I had built the infrastructure for autonomous agents to work without me.
+
+Parts 1 and 2 were about _me_ coding from the gym. This post is about what happens when I stop coding and let the agents take over.
+
+# From interactive to autonomous
+
+In the first two parts, the workflow was always interactive. I would type a prompt, watch the agent work, review the output, then type the next prompt. The phone was a remote control — I was still the one driving.
+
+But the pieces were already in place for something more hands-off:
+
+- My desktop is always on, with SSH access over Tailscale
+- tmux sessions persist even when I disconnect
+- AI tools like Amp and Claude Code can run in headless mode, accepting piped input
+- vaibhav already manages per-project sessions
+
+What if instead of me typing prompts one at a time, a script picked up the next task, piped it to an AI agent, checked the output, committed if it passed, and moved on to the next one? And what if I could kick that off from my phone and walk away?
+
+That is the Ralph loop.
+
+# What is Ralph?
+
+Ralph — named after Ralph Wiggum from The Simpsons — is a technique [coined by Geoffrey Huntley](https://ghuntley.com/ralph/). In its purest form, it is absurdly simple:
+
+```bash
+while :; do cat PROMPT.md | claude-code ; done
+```
+
+That is it. A bash loop that repeatedly pipes a prompt into a coding agent. Each iteration, the agent reads the current state of the codebase, does one thing, and exits. The loop spawns a fresh instance with a clean context window and lets it figure out what to do next.
+
+The name is deliberate. Ralph Wiggum is not the sharpest — he comes home bruised because he fell off the slide. But you can put signs next to the slide saying "SLIDE DOWN, DON'T JUMP, LOOK AROUND," and Ralph is more likely to look and see the sign. You tune Ralph by adding signs. Eventually Ralph has enough signs that the output is surprisingly good.
+
+A few key principles from Huntley's original formulation:
+
+- **One thing per loop.** Each iteration should do exactly one task. Not three, not "as many as you can." One.
+- **Trust the agent to prioritize.** Give it a plan with multiple items and let it decide what is most important. LLMs are surprisingly good at reasoning about priority and dependencies.
+- **Deterministically allocate the stack.** Every loop iteration should start with the same context: the plan, the specs, the current state. Fresh context window, same starting point.
+- **Tune with signs, not supervision.** When the agent makes mistakes, you do not fix them by watching — you add instructions (signs) to the prompt so the next Ralph avoids the same mistake.
+
+The beauty of Ralph is that it is _deterministically bad in a non-deterministic world_. You know the failure modes. You can identify them, add signs, and iterate. Each loop is cheap. Run another Ralph.
+
+# The vaibhav Ralph loop
+
+I built a Ralph loop implementation directly into vaibhav. It takes the raw concept and adds structure around it: a PRD-based task queue, project auto-detection, quality gates, and progress tracking.
+
+Here is the flow:
+
+```
+PRD → prd.json → Ralph Loop → Done
+                    ↓
+              Pick next story
+              Implement it
+              Run tests/lint
+              Commit
+              Update progress
+              Loop ↺
+```
+
+## Step 1: Initialize and write a PRD
+
+First, Ralph scans your project to detect the language, framework, and available commands (test, lint, build, typecheck):
+
+```bash
+vaibhav ralph init
+```
+
+Then you write a PRD — a product requirements document — by having a conversation with the AI:
+
+```bash
+vaibhav ralph prd create auth "Add user authentication with email/password login"
+```
+
+The agent asks clarifying questions, you answer, and it generates a structured markdown PRD with user stories and acceptance criteria.
+
+## Step 2: Convert to a task queue
+
+The PRD gets converted into `prd.json` — the machine-readable task queue that drives the loop:
+
+```bash
+vaibhav ralph prd convert tasks/prd-auth.md
+```
+
+This produces something like:
+
+```json
+{
+  "project": "myapp",
+  "branchName": "ralph/auth",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add users table",
+      "acceptanceCriteria": ["Create users table...", "Migration runs..."],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "US-002",
+      "title": "Add login API endpoint",
+      "priority": 2,
+      "passes": false
+    }
+  ]
+}
+```
+
+The converter ensures stories are right-sized (one context window each) and dependency-ordered (schema before backend before UI).
+
+## Step 3: Run the loop
+
+```bash
+vaibhav ralph run
+```
+
+This is where the magic happens. Each iteration:
+
+1. Reads `prd.json` to find the next story where `passes: false`
+2. Reads `progress.txt` to learn from previous iterations
+3. Checks out the correct git branch
+4. Implements that single story
+5. Runs quality checks — tests, lint, typecheck
+6. Commits with a structured message: `feat: [US-001] - Add users table`
+7. Marks the story as `passes: true` in `prd.json`
+8. Appends learnings to `progress.txt`
+9. Loops back. If all stories are done, exits.
+
+Each iteration spawns a fresh AI instance — a fresh Ralph. The context window is clean. The agent reads the plan and the progress log from scratch, picks up where the last Ralph left off, and does one thing.
+
+## The progress log is memory
+
+The `progress.txt` file is what gives Ralph a memory across iterations. Each Ralph appends what it learned:
+
+```
+## 2026-02-17 - US-001
+- Added users table with email, password_hash, created_at
+- Files: prisma/schema.prisma, prisma/migrations/
+- Learnings:
+  - Must run `npx prisma generate` after migration
+  - Database URL is in .env.local
+---
+```
+
+The next Ralph reads this before starting, so it knows: do not run migrations without generating the client. Do not look for the DB URL in `.env`. These are the "signs next to the slide."
+
+There is also a `## Codebase Patterns` section at the top that accumulates general patterns — things like "use server actions, not API routes" or "always validate with zod schemas." These persist across all stories, not just the one that discovered them.
+
+## Quality gates
+
+Every commit must pass quality checks. The commands come from your project config:
+
+```yaml
+commands:
+  test: "npm run test"
+  lint: "npm run lint"
+  build: "npm run build"
+  typecheck: "npx tsc --noEmit"
+```
+
+If Ralph breaks something, it does not commit. It tries to fix it within the same iteration. The loop only advances when the checks pass.
+
+# Running Ralph from the phone
+
+Here is where all three parts of this series come together. From Termux on my phone:
+
+```bash
+vaibhav ralph -p heimdall run --max-iterations 7
+```
+
+That one command SSHes into my desktop, starts a tmux session, and kicks off the Ralph loop for my project. Seven iterations. Each one picks up a story, implements it, commits, and moves on.
+
+I put my phone down. I do my workout. Between sets, I check progress:
+
+```bash
+vaibhav ralph -p heimdall status
+```
+
+```
+Ralph Status
+
+  Project:  heimdall
+  Branch:   ralph/auth
+  Progress: 5/7 stories complete
+
+  ● US-001  Add users table                    ✓
+  ● US-002  Add login API endpoint             ✓
+  ● US-003  Add session middleware              ✓
+  ● US-004  Add login page UI                  ✓
+  ● US-005  Add logout and session expiry       ✓
+  ○ US-006  Add password reset flow
+  ○ US-007  Add rate limiting
+```
+
+Five stories done while I was doing deadlifts. The agent is working on the sixth.
+
+<!-- TODO: Add screenshot of ralph status on phone -->
+
+# It works with any engine
+
+Ralph is not tied to one AI tool. vaibhav supports Amp, Claude Code, and OpenCode as engines:
+
+```bash
+vaibhav ralph run --engine amp
+vaibhav ralph run --engine claude
+vaibhav ralph run --engine opencode
+```
+
+Each engine gets the same prompt, the same task queue, the same quality checks. This matters because different tools have different strengths, and the "signs" you need for each Ralph are slightly different. Sometimes Claude is better at reasoning about a complex schema migration. Sometimes Amp is faster at a UI component. You can switch engines between runs or even between projects.
+
+# What I have actually built with this
+
+vaibhav itself was partly built by its own Ralph loop. The installation and update system — seven user stories covering version tracking, checksum verification, Termux downloads, desktop git pulls, SSH-based remote updates, and making both setup scripts idempotent — was implemented by Ralph iterating through the PRD one story at a time.
+
+<!-- TODO: Add screenshot of vaibhav ralph run in action -->
+
+Each story got its own commit, its own progress entry, its own set of learnings that the next iteration picked up. Story US-004 (Termux update with checksum verification) learned that `sha256sum` output uses two spaces between hash and filename. That learning was there for US-005 (SSH-based desktop update) to read.
+
+# The shift
+
+Parts 1 and 2 were about making _my_ time more productive. Part 3 is about making the time when I am _not coding_ productive.
+
+The fundamental shift is this: I went from being the operator of an AI tool to being the architect of a system that operates AI tools. I write the PRD, define the acceptance criteria, set the quality gates, and add the signs. Then I start the loop and step away.
+
+This does not replace deep work. When I am at my desk, I still do interactive sessions — reviewing diffs, debugging tricky issues, making architectural decisions. But the Ralph loop handles the implementation grind: the boilerplate, the migrations, the CRUD endpoints, the test scaffolding. The stuff that is well-specified and repetitive.
+
+# Closing thoughts
+
+The progression across these three posts mirrors a broader shift in how I think about AI coding tools:
+
+1. **Part 1:** AI tool as a remote service I connect to
+2. **Part 2:** Any AI tool, same workflow, from anywhere
+3. **Part 3:** AI tools running autonomously while I am away
+
+Each part built on the last. Without the always-on desktop from Part 1, I could not run agents remotely. Without the multi-tool SSH setup from Part 2, I could not pipe prompts into headless agents. And without the Ralph loop, those agents would just sit there waiting for my next instruction.
+
+The gym is incidental. What matters is that the system works without me. I could be at the gym, at school pickup, asleep, or just doing something else entirely. The agents keep coding.
+
+The setup is at [github.com/manojlds/vaibhav](https://github.com/manojlds/vaibhav). The Ralph loop documentation is in [RALPH.md](https://github.com/manojlds/vaibhav/blob/main/RALPH.md).
