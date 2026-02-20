@@ -13,7 +13,7 @@ In [Part 1](/blog/how-i-code-from-the-gym), I set up OpenCode Web on my Ubuntu d
 
 But here is the thing I did not fully appreciate when writing those posts: the real unlock was not "I can use any AI tool from my phone." The real unlock was that I had built the infrastructure for autonomous agents to work without me.
 
-Parts 1 and 2 were about _me_ coding from the gym. This post is about what happens when I stop coding and let the agents take over.
+Parts 1 and 2 were about _me_ coding from the gym. This post is about a new unlock: what happens when I am not even looking at my phone and the agents are still making progress.
 
 # From interactive to autonomous
 
@@ -226,13 +226,11 @@ vaibhav itself was partly built by its own Ralph loop. The installation and upda
 
 Each story got its own commit, its own progress entry, its own set of learnings that the next iteration picked up. Story US-004 (Termux update with checksum verification) learned that `sha256sum` output uses two spaces between hash and filename. That learning was there for US-005 (SSH-based desktop update) to read.
 
-# The shift
+# Another unlock
 
-Parts 1 and 2 were about making _my_ time more productive. Part 3 is about making the time when I am _not coding_ productive.
+I still do all the interactive stuff from Parts 1 and 2. I still type prompts from my phone between sets, review diffs at school pickup, and do deep interactive sessions at my desk. None of that has changed.
 
-I went from being the operator of an AI tool to being the architect of a system that operates AI tools. I write the PRD, define the acceptance criteria, set the quality gates, and add the signs. Then I start the loop and step away.
-
-This does not replace deep work. When I am at my desk, I still do interactive sessions, reviewing diffs, debugging tricky issues, making architectural decisions. But the Ralph loop handles the implementation grind: the boilerplate, the migrations, the CRUD endpoints, the test scaffolding. The stuff that is well-specified and repetitive.
+The Ralph loop is a new layer on top. It makes the time when I am _not coding_ productive too. I write the PRD, define the acceptance criteria, set the quality gates, and add the signs. Then I start the loop and step away. When I come back, there are commits waiting for me to review.
 
 # Closing thoughts
 
