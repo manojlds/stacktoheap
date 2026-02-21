@@ -17,7 +17,7 @@ const siteUrl = 'https://stacktoheap.com';
 
 const fullTitle = title ? `${title} | ${siteTitle}` : `${siteTitle} - ${siteDescription}`;
 const metaDescription = description || siteDescription;
-const metaImage = image ? `${siteUrl}/images/${image}` : `${siteUrl}/images/logo-high-resolution.png`;
+const metaImage = image ? (image.startsWith('/') ? `${siteUrl}${image}` : `${siteUrl}/images/${image}`) : `${siteUrl}/images/logo-high-resolution.png`;
 const canonicalURL = new URL(Astro.url.pathname, siteUrl);
 ---
 
