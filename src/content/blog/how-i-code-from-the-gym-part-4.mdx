@@ -114,13 +114,23 @@ d9d6d8c chore(release): bump to 3.0.0-alpha.0 and fix PR key env
 1f542c3 fix(describe): suppress verbose output when posting descriptions
 ```
 
-This is the verification and refinement phase. Things Ralph could not have known:
+These 11 commits fall into three categories, and each one tells you something about where the loop's boundary currently sits — and how that boundary could move.
 
-- **CI secrets configuration** — Ralph cannot test CI pipelines. The `opencode` key name in GitHub Actions secrets needed updating.
-- **Runtime behavior refinements** — enforcing in-process runtime, suppressing verbose output, loading `.env` automatically. These came from actually running the migrated code against real APIs.
-- **Architectural decisions** — removing the `drs_skill` custom tool entirely and relying on Pi's native skill discovery was a design choice that emerged from testing, not from the PRD.
+**CI and deployment issues** (`fix(ci): sync lockfile`, `fix(ci): resolve opencode key`). The loop had no way to know that the GitHub Actions workflow referenced a secret called `OPENCODE_API_KEY` that needed renaming, or that the lockfile would drift when Pi runtime dependencies changed. These are integration points that live outside the codebase.
 
-This is a pattern I expect with Ralph loops on migrations: **the loop handles the mechanical transformation (80%), and interactive sessions handle the integration testing and design refinements (20%).** The loop got the codebase from OpenCode to Pi. The interactive sessions made it production-ready.
+But they do not have to stay outside the loop. If I had wired up `gh cli` as part of the quality gate — push to a draft PR, run `gh run watch`, parse the output — Ralph could have caught these himself. The [snarktank/ralph](https://github.com/snarktank/ralph) implementation already supports this pattern. Next time, I plan to include a CI verification step so the loop can self-correct on deployment failures instead of leaving them for me.
+
+**Runtime behavior discovered through real usage** (`refactor: enforce in-process runtime`, `fix(review-local): write --output JSON`, `fix(describe): suppress verbose output`, `feat(cli): load .env automatically`). These came from actually running the migrated code against real APIs and noticing things: verbose output cluttering the review comments, JSON output not being written in certain flag combinations, `.env` files not loading automatically.
+
+This is where better e2e test coverage would close the gap. If the test suite had included a live integration test that exercised a real review flow end-to-end, these issues would have surfaced during the loop's quality gate phase, not after. I added one of those tests (`test(e2e): add opt-in live review-local LLM test`) during this phase — it will be there for the next loop.
+
+**Architectural decisions** (`refactor(skills): remove drs_skill tool`, `refactor(skills): rely on native pi skills prompt only`). Removing the `drs_skill` custom tool entirely and relying on Pi's native skill discovery was a design choice. It emerged from testing the migrated code and realizing that the abstraction layer Ralph had preserved was no longer necessary with Pi's native capabilities.
+
+This is the category that is hardest to automate. These were judgment calls about the system as a whole — not just "does this work?" but "is this the right design now that we are on Pi?" Ralph follows the plan. It does not question whether the plan itself should change mid-execution. That kind of holistic reasoning is where the human still adds the most value, and where the interactive agent sessions shine.
+
+The overall pattern: **the loop handles the mechanical transformation, and interactive sessions handle the verification and design refinements.** The loop got the codebase from OpenCode to Pi. The interactive sessions made it production-ready. Today, that split was roughly 80/20. But the 80 is the hard part to do manually — 60 files, nearly 4,000 lines of additions, all dependency-ordered and test-passing. The 20 is work I could do in an afternoon with an AI agent at my side.
+
+And the 80/20 split is not fixed. Each piece of post-loop work I did points to a specific improvement I can make for the next loop: add `gh cli` CI checks, add e2e integration tests, write more concrete acceptance criteria. The loop gets better each time, not because the models improve (though they do), but because the environment and feedback loops around them improve.
 
 The PR was merged at 19:00 UTC on Feb 22. Total wall-clock time from loop start to merge: about 18 hours, most of which was me being away or doing other things.
 
