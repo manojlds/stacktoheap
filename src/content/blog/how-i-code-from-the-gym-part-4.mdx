@@ -140,13 +140,35 @@ After going through this, I think SDK/framework migrations are one of the strong
 
 # Where it does not work (yet)
 
-**Integration testing.** Ralph cannot spin up a real GitLab instance and test that MR comments actually post correctly. It can write unit tests and pass type checks, but end-to-end verification requires a human or a proper staging environment.
+These are real limitations I hit, but the "yet" matters. Most of them are shrinking as tooling and techniques improve.
+
+**Integration and end-to-end testing.** Ralph cannot spin up a real GitLab instance and test that MR comments actually post correctly. It can write unit tests and pass type checks, but verifying that the migrated code works against real APIs required me to run it manually after the loop.
+
+This is one of the most active areas of improvement. As [Anthropic's harness engineering post](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) documents, the critical work is not writing code but designing the environment and feedback loops. The more verification you can make programmatic, the more Ralph can handle autonomously. If I had wired up a staging GitLab instance with a test MR that the loop could exercise, Ralph could have caught the CI issues itself. Geoffrey Huntley's [original formulation](https://ghuntley.com/ralph/) emphasizes this: "always look for opportunities to loop Ralph back on itself." Every feedback signal you add — test output, build logs, even screenshots via Playwright — makes the loop more self-correcting.
+
+In practice, this means the gap between "what Ralph can verify" and "what needs a human" is a function of how much you invest in your quality gates. The DRS project had good unit test coverage and strict TypeScript checks, which is why the loop produced usable code. Projects with comprehensive e2e test suites will get even better results.
+
+**CI and deployment feedback.** Secrets, environment variables, workflow triggers — these live outside the codebase and cannot be validated by local quality gates. After the Ralph loop, I spent several commits fixing CI: the `opencode` key name in GitHub Actions secrets needed updating, the lockfile needed syncing with new Pi runtime dependencies, and branch triggers needed adjusting.
+
+But this is not a fundamental limitation. Ralph loops can be given access to tools like `gh cli` to check CI status after pushing, read workflow run logs, and course-correct. The [snarktank/ralph](https://github.com/snarktank/ralph) implementation already supports this pattern: push, check CI, fix if red, iterate. The loop I ran did not do this because I had not wired it up, but the technique exists. Future runs could include a CI verification step as part of the quality gate — push to a draft PR, wait for the workflow, parse the result, and fix failures before moving on.
+
+**Compound errors.** This is the concern that comes up most often in [community discussions](https://www.reddit.com/r/ClaudeCode/comments/1qc4vg0/trust_me_bro_most_people_are_running_ralph_wiggum/): what if Ralph makes a mistake early on and everything built on top inherits that mistake? In my first attempt, this is exactly what happened. The abstract PRD led Ralph to build parallel abstractions that technically passed tests but did not integrate well with the existing codebase. Each subsequent story built on that shaky foundation.
+
+The mitigation is the same as in any engineering process: small stories, strong quality gates, and early verification. The second attempt worked because each story was small enough that mistakes were contained. US-001 created the Pi wrapper. If that wrapper was wrong, US-002 (which used it for `review-local`) would have failed its tests immediately, not six stories later. Dependency ordering is not just about build order — it is about error detection order.
+
+The progress log also helps here. When Ralph records what it learned in each iteration, the next Ralph reads those learnings before starting. If US-003 discovered that "platform APIs already return patches, pass them through review instructions instead of relying on fallback git commands," then US-004 inherits that knowledge for free. Mistakes propagate, but so do corrections.
 
 **Design decisions.** The choice to remove the `drs_skill` custom tool and rely on native Pi skill discovery was not in the PRD. It emerged from testing the migrated code and realizing the abstraction was no longer necessary. Ralph follows the plan. It does not question whether the plan is the right approach.
 
-**CI and deployment.** Secrets, environment variables, workflow triggers — these are configuration that lives outside the codebase and cannot be validated by local quality gates.
+This is where the human role remains essential. As Huntley puts it, "software is now clay on the pottery wheel and if something isn't right then you just throw it back on the wheel." Ralph handles the mechanical shaping. The potter decides what shape to make. In my case, the post-loop interactive sessions were where I made architectural calls: should skills be loaded natively or through a custom tool? Should the runtime enforce in-process mode? These are judgment calls that require understanding the system holistically, not just story-by-story.
 
-**PRD quality is everything.** My first attempt proved this. Six abstract stories produced code that passed checks but missed the point. Nine concrete stories, each mapped to a real codebase boundary, produced a working migration. The time spent rewriting the PRD was the most valuable part of the entire process.
+That said, the line between "mechanical" and "judgment" keeps moving. A year ago, you would not trust an LLM to reason about SDK migration boundaries. Today, with a well-written PRD, it handles them competently. The design decisions I made manually were about system-level trade-offs that crossed multiple story boundaries. As PRDs get more sophisticated and models get better at holistic reasoning, some of those decisions will move into the loop too.
+
+**PRD quality is the bottleneck.** My first attempt proved this decisively. Six abstract stories produced code that passed checks but missed the point. Nine concrete stories, each mapped to a real codebase boundary, produced a working migration. The time spent rewriting the PRD was the most valuable part of the entire process.
+
+This is the universal lesson from the Ralph community. Every practitioner who has shared results — from Huntley's [three-month programming language build](https://ghuntley.com/ralph/) to [YC hackathon teams shipping six repos overnight](https://github.com/repomirrorhq/repomirror/blob/main/repomirror.md) — emphasizes the same thing: the PRD is the product. You are not writing code anymore. You are writing specifications that a loop will execute. The quality of the output is bounded by the quality of the input.
+
+For migrations specifically, this means your stories should map to real code boundaries, not conceptual categories. "Migrate the runtime" is a conceptual category. "Migrate `review-local` to Pi SDK" is a code boundary. The difference is whether Ralph has to make architectural decisions (bad) or follow a pattern (good).
 
 # The numbers
 
