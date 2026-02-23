@@ -12,13 +12,13 @@ series:
 comments: true
 ---
 
-In [Part 3](/blog/how-i-code-from-the-gym-part-3), I introduced Ralph loops: autonomous coding agents that pick up a user story from a PRD, implement it, pass quality gates, commit, and move on to the next story without me. I talked about the concept and the vaibhav tooling that drives it.
+In [Part 3](/blog/2026/02/20/how-i-code-from-the-gym-part-3), I introduced Ralph loops: autonomous coding agents that pick up a user story from a PRD, implement it, pass quality gates, commit, and move on to the next story without me. I talked about the concept and the vaibhav tooling that drives it.
 
 This post is a case study. A real Ralph loop on a real project, with timestamps, commit hashes, two attempts (one that did not work well), and the manual work that came after. The task: migrating [DRS](https://github.com/manojlds/drs), my AI code review bot, from OpenCode SDK to Pi SDK.
 
 # The migration
 
-DRS is a TypeScript project that reviews GitLab MRs and GitHub PRs using AI agents. It was built on top of the [OpenCode SDK](https://github.com/nicepkg/opencode). I wanted to migrate the entire runtime to [Pi](https://github.com/nicepkg/opencode), a different coding agent SDK, while preserving full feature parity across three review flows: `review-local`, `review-mr`, and `review-pr`.
+DRS is a TypeScript project that reviews GitLab MRs and GitHub PRs using AI agents. It was built on top of the [OpenCode SDK](https://opencode.ai/). I wanted to migrate the entire runtime to [Pi](https://pi.dev/), a different coding agent SDK, while preserving full feature parity across three review flows: `review-local`, `review-mr`, and `review-pr`.
 
 This is not a trivial find-and-replace. The migration touches:
 
