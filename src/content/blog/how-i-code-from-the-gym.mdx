@@ -18,7 +18,7 @@ This sounds a little ridiculous until you have a setup that is actually smooth:
 
 - OpenCode Web runs on my Ubuntu box at home.
 - It starts automatically as a systemd service.
-- My phone reaches it over Tailscale, so I do not need to expose random ports to the public internet.
+- My phone reaches it over Tailscale with proper HTTPS — no ports exposed on my LAN.
 
 Once this is set up, I can open the OpenCode Web interface from my phone browser, review code, queue changes, run small fixes, and keep momentum going while away from my main machine.
 
@@ -44,6 +44,31 @@ The advantage of short sessions is timing. When a feature idea appears at the gy
 - capture docs/notes while the context is fresh
 
 The phone is just the control surface. The real work happens on a machine with proper compute, full repo access, and my existing toolchain.
+
+# Setting up Tailscale
+
+Before we set up the server, we need the networking layer. The key insight is using `tailscale serve` instead of exposing ports directly. This gives you a proper HTTPS URL with a real TLS certificate, and the server never needs to listen on anything other than localhost.
+
+Install Tailscale on both:
+
+- the Ubuntu machine running OpenCode Web
+- your phone ([Android](https://play.google.com/store/apps/details?id=com.tailscale.ipn) / [iOS](https://apps.apple.com/app/tailscale/id1470499037))
+
+Once both devices are on the same tailnet, there are two things to configure on the desktop:
+
+## 1) Enable Serve on your tailnet
+
+Visit your [Tailscale admin console](https://login.tailscale.com/admin/acls) and [enable Serve](https://tailscale.com/kb/1312/serve) for the machine. Tailscale will prompt you with a link the first time you run `tailscale serve`.
+
+## 2) Set yourself as the Tailscale operator
+
+By default, only root can modify Tailscale's serve config. Setting your user as the operator lets the systemd user service (which runs as your user) manage `tailscale serve` without sudo:
+
+```bash
+sudo tailscale set --operator=$USER
+```
+
+This is a one-time setup. With this in place, the systemd service we create next can automatically publish and tear down the Tailscale tunnel on start and stop.
 
 # Running OpenCode Web as a systemd service (Ubuntu)
 
@@ -73,7 +98,10 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=%h
-ExecStart=/path/to/opencode web --port 4096 --hostname 0.0.0.0
+ExecStart=/path/to/opencode web --port 4096 --hostname 127.0.0.1
+ExecStartPost=/bin/sh -c 'for i in 1 2 3 4 5 6 7 8 9 10; do curl -sf http://127.0.0.1:4096/global/health && exit 0; sleep 1; done; exit 1'
+ExecStartPost=/usr/bin/tailscale serve --bg --yes --https 443 http://127.0.0.1:4096
+ExecStopPost=-/usr/bin/tailscale serve --https 443 off
 Restart=on-failure
 RestartSec=5
 
@@ -82,6 +110,19 @@ WantedBy=default.target
 ```
 
 Replace `/path/to/opencode` with the output from `which opencode`.
+
+A few things to note about this unit file:
+
+- **`--hostname 127.0.0.1`**, not `0.0.0.0`. The server only listens on localhost. `tailscale serve` (configured in the previous section) handles external access with proper HTTPS. This means the port is never exposed on your LAN.
+- **`ExecStartPost`** (first) polls the health endpoint so systemd knows the service is truly ready before marking it as started.
+- **`ExecStartPost`** (second) sets up `tailscale serve` on port 443 so the URL is a clean `https://hostname.tailnet.ts.net` with no port number.
+- **`ExecStopPost`** tears down the `tailscale serve` listener when the service stops, preventing stale listeners from accumulating across restarts.
+
+If you want password protection, add an `Environment` line to the `[Service]` section:
+
+```ini
+Environment=OPENCODE_SERVER_PASSWORD=your-password-here
+```
 
 ## 3) Keep it running after logout
 
@@ -100,7 +141,7 @@ systemctl --user start opencode-web
 ## 5) Verify health and logs
 
 ```bash
-curl http://localhost:4096/global/health
+curl http://127.0.0.1:4096/global/health
 systemctl --user status opencode-web
 journalctl --user -u opencode-web -f
 ```
@@ -119,33 +160,19 @@ opencode attach http://localhost:4096
 
 ![OpenCode Web on Desktop](/images/opencode_web_desktop.png)
 
+# Accessing from your phone
 
-# Private access from phone using Tailscale
-
-Now for the connectivity piece.
-
-I install Tailscale on both:
-
-- the Ubuntu machine running OpenCode Web
-- my phone
-
-After both are on the same tailnet, my phone can reach the Ubuntu box via its Tailscale IP or MagicDNS name.
-
-For example:
+With the service running and `tailscale serve` active, your phone can reach OpenCode Web at a clean HTTPS URL:
 
 ```txt
-http://100.x.y.z:4096
+https://ubuntu-box.tailnet-name.ts.net
 ```
 
-or
-
-```txt
-http://ubuntu-box.tailnet-name.ts.net:4096
-```
+No port number, no self-signed certificate warnings — just open the URL in your phone browser and start coding.
 
 ![OpenCode Web on Phone](/images/opencode_phone.jpeg)
 
-Because traffic stays inside Tailscale, I do not need to open this port publicly on my router.
+Because the server binds to localhost and traffic goes through Tailscale's encrypted tunnel with a real TLS certificate, there is no port exposed on your LAN.
 
 # Alternatives I use sometimes
 
@@ -179,6 +206,8 @@ If you already run a homelab or an always-on dev box, this setup takes very litt
 
 Coding from the gym is not about replacing deep work blocks. It is about using dead time well.
 
-OpenCode Web + systemd + Tailscale gives me a reliable, secure, low-friction way to keep moving on code from anywhere. Once it is running, my phone becomes a surprisingly capable remote cockpit for coding agents.
+OpenCode Web + systemd + `tailscale serve` gives me a reliable, secure, low-friction way to keep moving on code from anywhere. Once it is running, my phone becomes a surprisingly capable remote cockpit for coding agents.
+
+If you want to automate this entire setup, [vaibhav](https://github.com/manojlds/vaibhav)'s `setup-desktop.sh` handles the systemd service creation, health checks, and `tailscale serve` configuration in one step.
 
 The Switch moment for coding is here and I am all up for it!
