@@ -1,0 +1,198 @@
+---
+title: "Managing Context Windows with pi /tree: Branches, Summaries, and Subagent-like Workflows"
+excerpt: "How I use pi's /tree to manage context windows in long coding sessions, when to choose /tree vs /fork, and patterns that feel like lightweight subagents without leaving one session."
+date: 2026-02-26
+reading_time: 8 mins
+categories: [ai, productivity, developer-tools]
+tags: [pi, context-window, session-management, tree, fork, agents, subagents]
+comments: true
+---
+
+If you use coding agents heavily, you eventually hit the same wall: **context window pressure**.
+
+Not because your model is bad, but because your session gets noisy:
+- exploratory dead ends,
+- temporary hypotheses,
+- huge tool outputs,
+- and too many "let's try one more thing" turns.
+
+I've been using [pi](https://github.com/badlogic/pi-mono)'s `/tree` command to deal with this in a way that feels surprisingly powerful. Once it clicks, you can treat your session like a branching workspace: explore aggressively, preserve useful outcomes, then hop back to your clean path.
+
+This post explains how that works, when to use `/tree` vs `/fork`, and why this can mimic some benefits of subagents.
+
+# The key mental model
+
+A pi session is a **tree**, not a strict chat timeline.
+
+- Each message has an `id` and `parentId`.
+- Your current position is the active leaf.
+- `/tree` lets you move that leaf to another point and continue from there.
+
+So instead of "one long chat", think:
+
+- mainline branch,
+- exploration branches,
+- recovery branches,
+- and checkpoints.
+
+This matters because the LLM only sees the current branch context, not all branches at once.
+
+# `/tree` vs `/fork` (the part that confuses everyone)
+
+They look similar, but they solve different problems.
+
+| Command | What it does | Where history lives |
+|---|---|---|
+| `/tree` | Move to another point in the same session and continue from there | Same session file |
+| `/fork` | Create a new session file from a chosen point | New session file |
+
+## Practical interpretation
+
+- Use **`/tree`** when you want fast branch hopping during one focused workstream.
+- Use **`/fork`** when a branch becomes a separate mission (new project thread, separate deliverable, long-running effort).
+
+One subtle but important point:
+
+If you jump to an old assistant message with `/tree`, then send a new user message, you now have a new branch **inside the same session**.
+
+# What summarization does during `/tree` navigation
+
+When you switch branches with `/tree`, pi can optionally summarize the branch you're leaving.
+
+That summary is written as a `branch_summary` entry and injected into the new path, so you carry over the essence of abandoned work without carrying all token-heavy details.
+
+## Example
+
+Suppose your tree looks like this:
+
+```text
+A
+├─ B ─ C ─ D   (old leaf, exploratory branch)
+└─ E ─ F       (target branch)
+```
+
+You move from `D` to `F`.
+
+- Common ancestor: `A`
+- "Left behind" path: `B, C, D`
+- If you choose summarize: pi compresses `B/C/D` into a branch summary and appends it on the new path near your new leaf.
+
+So the new branch gets the insight, not the clutter.
+
+# Important caveat: `/tree` is not code undo
+
+`/tree` changes conversation position. It does **not** revert filesystem changes.
+
+If you made edits in your repo, those files stay edited unless you undo with git or manual edits.
+
+So I use this rule:
+- Conversation branching: `/tree`
+- File state rollback: git (`restore`, `checkout`, `reset`, etc.)
+
+# Patterns that work really well
+
+These are the patterns I've found most useful.
+
+## 1) Spike-and-return pattern
+
+Use case: uncertain approach, quick experiment needed.
+
+1. From mainline, `/tree` to earlier point (or current point) and branch.
+2. Run noisy exploration: logs, experiments, dead ends.
+3. Persist useful output to file (`notes.md`, `analysis.json`, etc.).
+4. Switch back to mainline via `/tree`.
+5. Continue with clean context and consume saved result.
+
+This gives you freedom to explore without polluting the main branch prompt history.
+
+## 2) Analyst branch + implementer branch (subagent-like)
+
+Use case: mimic role separation inside one session.
+
+- **Analyst branch:** gather facts, inspect codebase, benchmark options, produce recommendation doc.
+- **Implementer branch:** read recommendation doc, make precise code changes.
+
+This feels like two specialized agents, but you're using one agent and one session tree.
+
+It's not true parallelism, but it creates role isolation and cleaner context.
+
+## 3) Branch-per-hypothesis debugging
+
+Use case: bug has 3 plausible root causes.
+
+Create 3 short branches, one per hypothesis:
+- H1 branch: test DB timeout path,
+- H2 branch: test cache invalidation race,
+- H3 branch: test serialization mismatch.
+
+Each branch ends with one artifact: "evidence for/against hypothesis".
+Then return to a decision branch and act based on evidence.
+
+## 4) Summary-assisted context carryover
+
+Use case: long exploratory branch, need to keep only key findings.
+
+When switching back, choose "Summarize" (or custom summarize prompt) so you don't lose key outcomes.
+This is especially useful after tool-heavy branches with large outputs.
+
+# When this mimics subagents well (and when it does not)
+
+## Feels like subagents when:
+- you need role separation (research vs implement),
+- you want isolated thought tracks,
+- you want to keep mainline context clean,
+- you can work sequentially.
+
+## Still not equivalent to subagents when:
+- you need true parallel execution,
+- you need independent tool policies per agent,
+- you need separate model configs running at the same time,
+- you want strict process boundaries.
+
+So `/tree` is a great **lightweight substitute** for many subagent workflows, but not a full replacement.
+
+# `/tree` vs Claude Code `/rewind`
+
+The closest mainstream feature to pi `/tree` is Claude Code's `/rewind`.
+
+They overlap, but they optimize for different mental models:
+
+| Feature | pi `/tree` | Claude Code `/rewind` |
+|---|---|---|
+| Primary model | Navigate a conversation tree branch | Time-travel to a checkpoint |
+| Conversation behavior | Switch leaf and continue from that branch | Restore to earlier conversation state |
+| Code/file rollback | Not built into `/tree` (use git) | Rewind flow is designed around checkpoint restore choices |
+| Branch carryover summary | Built in as optional branch summarization when switching | Rewind is more checkpoint-centric than branch-centric |
+| Best for | Ongoing branch management + context hygiene | Fast undo/recovery from a bad path |
+
+## How I use both mental models
+
+- If I want **branch-first exploration** (research branch, implementation branch, hypothesis branches), I prefer pi `/tree`.
+- If I want **"take me back before this went wrong"**, rewind-style workflows are excellent.
+
+So if you're coming from Claude Code, think of pi `/tree` as less of an undo button and more of a branch navigator for long-lived sessions.
+
+# My personal operating playbook
+
+For long sessions, I follow this checklist:
+
+1. Keep a clean mainline branch for decision and implementation.
+2. Send all noisy exploration into side branches with `/tree`.
+3. Persist outcomes to files, not just chat text.
+4. Use branch summarization when leaving heavy branches.
+5. Use `/fork` once a branch becomes a separate long-running mission.
+6. Use git for code rollback (never assume `/tree` handles files).
+
+# Closing thought
+
+A lot of "agent reliability" pain is really **context hygiene** pain.
+
+`/tree` gives you an ergonomic way to do context hygiene intentionally:
+- isolate noise,
+- preserve insight,
+- return to clean state,
+- keep moving.
+
+If you already think in git branches, this maps naturally to how you reason about work. The only difference is now you're branching not just code, but the conversation state driving your AI pair programmer.
+
+And once you internalize that, long sessions stop feeling fragile.
