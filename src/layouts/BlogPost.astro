@@ -75,13 +75,25 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
         <slot />
       </div>
 
-      <!-- Lightbox modal -->
-      <dialog id="image-lightbox" class="fixed inset-0 z-50 m-0 h-screen w-screen max-h-none max-w-none bg-transparent p-0 backdrop:bg-black/80">
-        <div class="flex h-full w-full items-center justify-center p-4" id="lightbox-backdrop">
-          <div class="relative max-h-[90vh] max-w-[90vw]">
-            <img id="lightbox-img" src="" alt="" class="max-h-[90vh] max-w-[90vw] rounded-lg object-contain" />
-            <p id="lightbox-caption" class="mt-2 text-center text-sm text-white/80"></p>
+      <!-- Shared image and diagram viewer -->
+      <dialog id="media-lightbox" aria-labelledby="media-lightbox-title">
+        <div id="media-lightbox-shell">
+          <div id="media-lightbox-toolbar">
+            <div>
+              <p id="media-lightbox-title">Expanded media</p>
+              <p id="media-lightbox-help">Drag to pan · Scroll or pinch to zoom</p>
+            </div>
+            <div id="media-lightbox-actions">
+              <button type="button" data-media-action="zoom-out" aria-label="Zoom out">−</button>
+              <button type="button" data-media-action="reset" aria-label="Reset zoom">100%</button>
+              <button type="button" data-media-action="zoom-in" aria-label="Zoom in">+</button>
+              <button type="button" data-media-action="close" aria-label="Close expanded view">×</button>
+            </div>
           </div>
+          <div id="media-lightbox-viewport">
+            <img id="media-lightbox-content" src="" alt="" draggable="false" />
+          </div>
+          <p id="media-lightbox-caption"></p>
         </div>
       </dialog>
       {tags.length > 0 && (
@@ -103,36 +115,186 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
   </article>
 
   <script>
-    const dialog = document.getElementById('image-lightbox') as HTMLDialogElement;
-    const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
-    const lightboxCaption = document.getElementById('lightbox-caption') as HTMLParagraphElement;
-    const backdrop = document.getElementById('lightbox-backdrop') as HTMLDivElement;
+    const dialog = document.getElementById('media-lightbox') as HTMLDialogElement;
+    const viewport = document.getElementById('media-lightbox-viewport') as HTMLDivElement;
+    const media = document.getElementById('media-lightbox-content') as HTMLImageElement;
+    const title = document.getElementById('media-lightbox-title') as HTMLParagraphElement;
+    const caption = document.getElementById('media-lightbox-caption') as HTMLParagraphElement;
+    const resetButton = dialog.querySelector('[data-media-action="reset"]') as HTMLButtonElement;
 
-    // Attach click handler to all images in the prose area and BlogImage figures
-    document.querySelectorAll('.prose img, .blog-image img').forEach((img) => {
-      const imgEl = img as HTMLImageElement;
-      imgEl.addEventListener('click', () => {
-        lightboxImg.src = imgEl.src;
-        lightboxImg.alt = imgEl.alt;
+    let scale = 1;
+    let fitScale = 1;
+    let x = 0;
+    let y = 0;
+    let objectUrl = '';
+    let opener: HTMLElement | null = null;
+    const pointers = new Map<number, { x: number; y: number }>();
+    let dragOrigin: { pointerX: number; pointerY: number; x: number; y: number } | null = null;
+    let pinchOrigin: { distance: number; scale: number } | null = null;
 
-        // Check for caption from figcaption sibling
-        const figure = imgEl.closest('figure');
-        const caption = figure?.querySelector('figcaption')?.textContent || '';
-        lightboxCaption.textContent = caption;
-        lightboxCaption.style.display = caption ? '' : 'none';
+    const renderTransform = () => {
+      media.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+      resetButton.textContent = `${Math.round((scale / fitScale) * 100)}%`;
+    };
 
-        dialog.showModal();
+    const resetView = () => {
+      const width = media.naturalWidth || 1;
+      const height = media.naturalHeight || 1;
+      fitScale = Math.min(
+        (viewport.clientWidth - 24) / width,
+        (viewport.clientHeight - 24) / height,
+        1
+      );
+      scale = fitScale;
+      x = 0;
+      y = 0;
+      renderTransform();
+    };
+
+    const zoomAt = (nextScale: number, clientX?: number, clientY?: number) => {
+      const maximum = Math.max(fitScale * 8, 4);
+      const clamped = Math.min(maximum, Math.max(fitScale, nextScale));
+      const rect = viewport.getBoundingClientRect();
+      const focusX = (clientX ?? rect.left + rect.width / 2) - rect.left - rect.width / 2;
+      const focusY = (clientY ?? rect.top + rect.height / 2) - rect.top - rect.height / 2;
+      const ratio = clamped / scale;
+      x = focusX - (focusX - x) * ratio;
+      y = focusY - (focusY - y) * ratio;
+      scale = clamped;
+      renderTransform();
+    };
+
+    const openMedia = (src: string, alt: string, mediaTitle: string, mediaCaption = '') => {
+      media.onload = resetView;
+      media.src = src;
+      media.alt = alt;
+      title.textContent = mediaTitle;
+      caption.textContent = mediaCaption;
+      caption.hidden = !mediaCaption;
+      document.body.classList.add('media-lightbox-open');
+      dialog.showModal();
+    };
+
+    document.querySelectorAll('.prose img, .blog-image img').forEach((image) => {
+      const imageElement = image as HTMLImageElement;
+      imageElement.tabIndex = 0;
+      imageElement.setAttribute('role', 'button');
+      imageElement.setAttribute('aria-label', `Open larger view${imageElement.alt ? `: ${imageElement.alt}` : ''}`);
+      const open = () => {
+        opener = imageElement;
+        const figure = imageElement.closest('figure');
+        const imageCaption = figure?.querySelector('figcaption')?.textContent?.trim() ?? '';
+        openMedia(imageElement.currentSrc || imageElement.src, imageElement.alt, 'Expanded image', imageCaption);
+      };
+      imageElement.addEventListener('click', open);
+      imageElement.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          open();
+        }
       });
     });
 
-    // Close on backdrop click
-    backdrop.addEventListener('click', (e) => {
-      if (e.target === backdrop) {
-        dialog.close();
+    document.querySelectorAll('.prose .mermaid').forEach((diagram) => {
+      const diagramElement = diagram as HTMLElement;
+      diagramElement.classList.add('mermaid-expandable');
+      diagramElement.tabIndex = 0;
+      diagramElement.setAttribute('role', 'button');
+      diagramElement.setAttribute('aria-label', 'Open interactive diagram viewer');
+      diagramElement.title = 'Open larger diagram';
+      const open = () => {
+        const svg = diagramElement.querySelector('svg');
+        if (!svg) return;
+        opener = diagramElement;
+        const expandedSvg = svg.cloneNode(true) as SVGSVGElement;
+        const viewBox = svg.viewBox.baseVal;
+        if (viewBox.width && viewBox.height) {
+          expandedSvg.setAttribute('width', String(viewBox.width));
+          expandedSvg.setAttribute('height', String(viewBox.height));
+        }
+        const serialized = new XMLSerializer().serializeToString(expandedSvg);
+        objectUrl = URL.createObjectURL(new Blob([serialized], { type: 'image/svg+xml' }));
+        openMedia(objectUrl, 'Expanded Mermaid diagram', 'Expanded diagram');
+      };
+      diagramElement.addEventListener('click', open);
+      diagramElement.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          open();
+        }
+      });
+    });
+
+    dialog.querySelector('[data-media-action="close"]')?.addEventListener('click', () => dialog.close());
+    dialog.querySelector('[data-media-action="zoom-in"]')?.addEventListener('click', () => zoomAt(scale * 1.25));
+    dialog.querySelector('[data-media-action="zoom-out"]')?.addEventListener('click', () => zoomAt(scale / 1.25));
+    resetButton.addEventListener('click', resetView);
+
+    viewport.addEventListener('wheel', (event) => {
+      event.preventDefault();
+      zoomAt(scale * Math.exp(-event.deltaY * 0.0015), event.clientX, event.clientY);
+    }, { passive: false });
+
+    viewport.addEventListener('pointerdown', (event) => {
+      viewport.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pointers.size === 1) {
+        dragOrigin = { pointerX: event.clientX, pointerY: event.clientY, x, y };
+      } else if (pointers.size === 2) {
+        const [first, second] = [...pointers.values()];
+        pinchOrigin = { distance: Math.hypot(second.x - first.x, second.y - first.y), scale };
+        dragOrigin = null;
       }
     });
 
-    // Close on Escape (native dialog behavior) and image click
-    lightboxImg.addEventListener('click', () => dialog.close());
+    viewport.addEventListener('pointermove', (event) => {
+      if (!pointers.has(event.pointerId)) return;
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pointers.size === 2 && pinchOrigin) {
+        const [first, second] = [...pointers.values()];
+        const distance = Math.hypot(second.x - first.x, second.y - first.y);
+        zoomAt(
+          pinchOrigin.scale * (distance / pinchOrigin.distance),
+          (first.x + second.x) / 2,
+          (first.y + second.y) / 2
+        );
+      } else if (pointers.size === 1 && dragOrigin) {
+        x = dragOrigin.x + event.clientX - dragOrigin.pointerX;
+        y = dragOrigin.y + event.clientY - dragOrigin.pointerY;
+        renderTransform();
+      }
+    });
+
+    const releasePointer = (event: PointerEvent) => {
+      pointers.delete(event.pointerId);
+      pinchOrigin = null;
+      dragOrigin = null;
+      if (pointers.size === 1) {
+        const remaining = [...pointers.values()][0];
+        dragOrigin = { pointerX: remaining.x, pointerY: remaining.y, x, y };
+      }
+    };
+    viewport.addEventListener('pointerup', releasePointer);
+    viewport.addEventListener('pointercancel', releasePointer);
+
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key === '+' || event.key === '=') zoomAt(scale * 1.25);
+      if (event.key === '-') zoomAt(scale / 1.25);
+      if (event.key === '0') resetView();
+    });
+    dialog.addEventListener('close', () => {
+      document.body.classList.remove('media-lightbox-open');
+      media.removeAttribute('src');
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = '';
+      pointers.clear();
+      opener?.focus();
+    });
+    window.addEventListener('resize', () => {
+      if (dialog.open) resetView();
+    });
   </script>
 </BaseLayout>
