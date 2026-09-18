@@ -12,16 +12,16 @@ This is the Astro-powered version of StackToHeap, migrated from Jekyll for bette
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Start development server
-npm run dev
+pnpm dev
 
 # Build for production
-npm run build
+pnpm build
 
 # Preview production build
-npm run preview
+pnpm preview
 ```
 
 ## 🛠️ Technology Stack

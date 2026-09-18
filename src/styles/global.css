@@ -68,3 +68,15 @@
   font-weight: var(--shiki-dark-font-weight) !important;
   text-decoration: var(--shiki-dark-text-decoration) !important;
 }
+
+/* Mermaid diagrams in prose: don't let the lightbox cursor or max-height squash them. */
+.prose .mermaid,
+.prose pre.mermaid {
+  cursor: default;
+  overflow-x: auto;
+}
+
+.prose .mermaid svg {
+  max-height: none;
+  margin-inline: auto;
+}

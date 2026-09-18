@@ -89,9 +89,9 @@ Custom components following shadcn design patterns:
 
 ### Commands
 ```bash
-npm run dev       # Start dev server
-npm run build     # Build for production
-npm run preview   # Preview production build
+pnpm dev       # Start dev server
+pnpm build     # Build for production
+pnpm preview   # Preview production build
 ```
 
 ### Adding Content

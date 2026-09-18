@@ -24,7 +24,7 @@ This document describes all the GitHub Actions workflows configured for this pro
 
 **Steps:**
 1. Checkout repository
-2. Setup Node.js 20 with npm caching
+2. Setup Node.js 20 with pnpm caching
 3. Install dependencies
 4. Run type checking (`astro check`)
 5. Build site for production
@@ -32,7 +32,7 @@ This document describes all the GitHub Actions workflows configured for this pro
 7. Deploy to GitHub Pages
 
 **Features:**
-- ✅ npm caching for faster builds
+- ✅ pnpm caching for faster builds
 - ✅ Type checking before deployment
 - ✅ Concurrency control (one deployment at a time)
 - ✅ Production environment variables
@@ -67,7 +67,7 @@ This document describes all the GitHub Actions workflows configured for this pro
 
 **Features:**
 - ✅ Parallel job execution
-- ✅ npm caching
+- ✅ pnpm caching
 - ✅ Concurrency control per PR
 
 ### PR Preview Comment
@@ -137,7 +137,7 @@ Posts a comment on PRs with:
 
 **Functionality:**
 Automated dependency updates for:
-- npm packages (weekly, Mondays at 9 AM)
+- pnpm packages (weekly, Mondays at 9 AM)
 - GitHub Actions (weekly, Mondays at 9 AM)
 
 **Grouping:**
@@ -183,12 +183,13 @@ All workflows use minimal required permissions:
 
 ## Caching Strategy
 
-All workflows use npm caching via `actions/setup-node@v4`:
+All workflows use pnpm caching via `pnpm/action-setup` and `actions/setup-node`:
 ```yaml
-- uses: actions/setup-node@v4
+- uses: pnpm/action-setup@v4
+- uses: actions/setup-node@v6
   with:
     node-version: '20'
-    cache: 'npm'
+    cache: 'pnpm'
 ```
 
 This significantly speeds up workflow runs by caching `node_modules`.
