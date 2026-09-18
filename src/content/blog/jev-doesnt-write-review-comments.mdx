@@ -1,177 +1,255 @@
 ---
-title: "Jev Doesn't Write Review Comments: Using TypeSafe System One as a Merge Gate"
-excerpt: "I already have an LLM that writes code reviews. Jev is a typed decision function. Here's a local CLI that turns a git diff into approve / comment / request_changes / escalate — and why the interesting part is the TypeScript around the model."
+title: "Jev: AI Decisions as a Typed Function Call"
+excerpt: "What TypeSafe's Jev is, how its probabilistic primitives differ from LLMs and BERT-style classifiers, and what I learned using it for two code-review experiments."
 date: 2026-09-18
-reading_time: 8 mins
+reading_time: 11 mins
 categories: [ai, developer-tools]
-tags: [jev, typesafe, code-review, system-one, git]
+tags: [jev, typesafe, system-one, machine-learning, code-review]
 comments: true
-draft: true
+draft: false
 ---
 
-I already have a code reviewer. [DRS](https://github.com/manojlds/drs) is an agent that reads a diff and writes comments. That's the usual shape now: dump the change into a chat model, hope the prose is useful, maybe paste it on a PR.
+Most AI applications begin with a prompt and end with text. Even when the program really needs a decision, we ask a language model to write a response and then parse that response back into something code can use.
 
-[TypeSafe's Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev) is not that.
+[TypeSafe's Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev) starts with a different interface:
 
-Jev is a **System One** model: unstructured state in, typed probabilistic decisions out. It does not generate strings. You send it a blob of state plus a pack of questions, and it answers all of them in parallel as one of three primitives:
+> unstructured state in, typed probabilistic decisions out.
 
-- **Noul** — P(yes) in `[0, 1]`. A fuzzy `if`.
-- **Choice** — one option from a closed set, plus the full distribution and a confidence.
-- **Score** — a position on an ordered rubric you wrote.
+Jev is TypeSafe's first **System One model**. It accepts text or structured text state, evaluates a set of predefined questions, and returns bounded answers with probabilities. It does not write an explanation, generate code, or invent another output shape.
 
-The TypeScript around that call is the System Two. That's the whole product: decompose a judgment into atomic questions, compose the answers in code, and treat **confidence** as a second axis (auto / look / escalate).
+That makes Jev less like a chatbot and more like a semantic function call.
 
-So I wanted a prototype where Jev *is* the reviewer, not a sidecar that slaps a 82/100 on an LLM essay. Local git diff. One function call. Policy in code. A merge decision, not a comment.
+```mermaid
+flowchart LR
+  State[application state] --> Jev[Jev]
+  Questions[typed questions] --> Jev
+  Jev --> Answers[probabilities and typed answers]
+  Answers --> Code[policy in ordinary code]
+  Code --> Action[act / route / review]
+```
 
-The CLI is [jev-review](https://github.com/manojlds/jev-review).
+The model supplies judgments. Your code still owns control flow, thresholds, side effects, and the final decision.
 
-# Review as a gate, not an essay
+# Three question types
 
-A chat model is good at "here's why this line is wrong." It is a bad merge gate. The output is prose. You can't threshold prose. You can't unit-test prose. You definitely shouldn't `exit 1` because a paragraph felt negative.
+Jev exposes three primitives. They can be mixed in one request and are evaluated independently against the same state.
 
-A merge gate needs questions like:
+| Primitive | Use it for | Returned value |
+| --- | --- | --- |
+| **Noul** | A yes/no proposition | `P(yes)` from 0 to 1 |
+| **Choice** | One option from a closed set | winner, distribution, confidence |
+| **Score** | A position on an ordered rubric | weighted score, distribution, confidence |
 
-- Is there a **concrete** security issue in this diff, not a hypothetical one?
-- How correct is this relative to the task?
-- Are the tests covering the changed behavior, or is there nothing to judge?
-- What's the primary risk, if any?
+A Noul is a fuzzy boolean. "Does this ticket request a refund?" might return `0.93`, rather than only `true`.
 
-Those are Nouls, Scores, and Choices. Jev answers them. Policy decides.
+A Choice asks Jev to select among options you define. A support router might choose `billing`, `technical`, or `account`, while preserving the probability assigned to every option.
+
+A Score is not an arbitrary number. You provide ordered descriptions such as `calm`, `frustrated`, and `very angry`; Jev returns a probability-weighted position over those levels.
+
+Choice and Score answers also include a confidence derived from the shape of their probability distribution. Nouls expose the probability directly. These are related signals, but not identical fields on every primitive.
+
+This distinction matters. The answer tells the program **what** Jev currently favors. Confidence tells the program whether it should act, gather more context, or escalate.
+
+# Jev, LLMs, and BERT solve different interface problems
+
+It is tempting to describe every model that understands text as a smaller or larger LLM. That is not a useful comparison here.
+
+## Compared with a generative LLM
+
+A generative LLM has an open-ended output space. That is exactly what you want for explanations, code, summaries, and conversation. Modern LLMs can also produce JSON or call tools, so "LLMs only return prose" would be wrong.
+
+The difference is the native contract. With an LLM, structured output is a constraint around a text generator. The application usually needs a schema, validation, retries, and a policy for malformed or semantically inconsistent output. Jev is trained and served for closed decisions and probabilities instead of string generation. TypeSafe calls its training approach [Reinforcement Learning for Calibrated Decisions](https://docs.typesafe.ai/introduction/machine-learning-primer).
+
+Calibration is a property across many predictions, not a promise that one answer is correct. If predictions assigned `0.8` are well calibrated, roughly 80 percent of that group should be correct. A single `0.8` can still be wrong.
+
+| | Generative LLM | Jev |
+| --- | --- | --- |
+| Native output | Tokens / text | Closed typed decisions |
+| Best fit | Explain, create, converse, reason in the open | Classify, score, route, verify |
+| Possible answers | Open-ended | Defined by the caller |
+| Uncertainty | Often added through prompting or application logic | Probabilities are part of the response |
+| Application role | Can propose both reasoning and action | Supplies signals to code-owned policy |
+
+This is not an intelligence leaderboard. It is a choice of abstraction. A code-review comment needs language generation; a low-latency routing decision may not.
+
+## Compared with BERT-style classifiers
+
+[BERT](https://arxiv.org/abs/1810.04805) is a pretrained bidirectional text encoder. The classic deployment pattern adds or fine-tunes an output head for a task such as sentiment, entailment, or intent classification. That can be excellent when you own a stable task, training data, evaluation set, and model-serving stack.
+
+Jev exposes a hosted, request-defined decision API instead. The caller describes a Choice, Score, or Noul at runtime and supplies the state to evaluate. I do not need to train and deploy a new classification head for every question pack.
+
+| | BERT-style classifier | Jev |
+| --- | --- | --- |
+| Task definition | Usually fixed by training/fine-tuning and an output head | Supplied as questions in each request |
+| Operation | Run a model built for a known label space | Ask new bounded questions over supplied state |
+| Ownership | Commonly self-trained or self-hosted | Hosted API and SDK |
+| Good fit | Stable, high-volume task with representative labeled data | Rapidly changing semantic decisions composed in software |
+
+This comparison is about how an application uses the model, not Jev's undisclosed internal architecture. It would be speculation to call Jev "BERT with dynamic labels" or to claim that one approach is universally more accurate. A trained classifier may be the better system for a narrow, mature task. Jev is interesting when the decision changes faster than a conventional train-and-deploy cycle.
+
+# Calling Jev
+
+The JavaScript SDK makes the contract concrete:
+
+```ts
+import { choice, noul, score, TypeSafeClient } from "@typesafe-ai/sdk";
+
+const client = new TypeSafeClient(); // reads TYPESAFE_API_KEY
+
+const response = await client.systemOne({
+  state: {
+    ticket: "I was charged twice and need this fixed today.",
+    plan: "business",
+  },
+  questions: {
+    department: choice("Which team should handle this ticket?", {
+      billing: "Payment, invoice, or subscription issue",
+      technical: "Product failure or integration issue",
+      account: "Login, identity, or account-management issue",
+    }),
+    urgency: score("How urgent is the request?", [
+      "No time pressure",
+      "Time-sensitive but not blocking",
+      "Immediate business impact",
+    ]),
+    duplicateCharge: noul("Does the ticket report a duplicate charge?"),
+  },
+});
+
+const department = response.answers.department;
+
+if (department.confidence < 0.5) {
+  routeToHuman(response);
+} else if (department.choice === "billing") {
+  routeToBilling(response);
+}
+```
+
+The important design work is not constructing the client. It is:
+
+- putting enough relevant evidence in `state`;
+- asking atomic questions rather than one vague mega-question;
+- defining options and score levels that do not overlap;
+- choosing thresholds from tests on your own data;
+- deciding what happens when the model is uncertain.
+
+You can try the [TypeSafe playground](https://console.typesafe.ai/playground), call `POST /v1/systemone`, or use the JavaScript and Python SDKs. Jev is a remote service, so the state leaves your process; privacy, retention, and trust-boundary decisions belong in the design, not as an afterthought.
+
+# Where the interface fits
+
+The common shape is a semantic decision inside a deterministic workflow:
+
+- classify support tickets, documents, transactions, or user intent;
+- route work to a team, tool, specialist model, or human;
+- score relevance, severity, risk, or quality against an explicit rubric;
+- verify citations, policy compliance, tool calls, or another model's output;
+- rank or filter retrieval candidates;
+- extract probabilistic features for a downstream model;
+- moderate content with separate severity and confidence thresholds;
+- apply semantic lint rules that ordinary syntax-based tools cannot express.
+
+Jev is not the whole application in any of these examples. A fraud workflow still needs transaction rules. A moderation system still needs policy and appeals. A verifier still needs to decide what evidence is sufficient.
+
+It is also not a replacement for generation. If the output must be a useful explanation, a patch, an email, or an open-ended investigation, use a generative model or a person. Jev can classify or route that work, but it does not produce it.
+
+# Experiment one: a merge gate
+
+Code review gave me a useful test because it needs both kinds of intelligence:
+
+- open-ended diagnosis: find a bug and explain the affected line;
+- bounded judgment: estimate risk and decide whether automation should proceed.
+
+I built [jev-review](https://github.com/manojlds/jev-review) to test the second half without an LLM reviewer. It collects a local Git diff, captures the intended task, asks Jev 23 questions, and applies a deterministic TypeScript policy.
+
+```mermaid
+flowchart LR
+  Diff[git diff] --> Pack[filter and pack context]
+  Task[task or commit messages] --> Pack
+  Pack --> Jev[Jev question pack]
+  Jev --> Policy[TypeScript policy]
+  Policy --> Result[approve / comment / request_changes / escalate]
+```
+
+The pack contains:
+
+- seven applicability Nouls;
+- seven 0-4 Scores for correctness, test coverage, security, blast radius, reliability, changeability, and compatibility;
+- three Choices for concrete weaknesses;
+- three gate Nouls: `safe_to_merge`, `needs_human_review`, and `has_security_concern`;
+- three classifications for change kind, primary risk, and review focus.
+
+Applicability prevents missing evidence from becoming a fake zero. A documentation-only change should not fail because test coverage is inapplicable. Jev evaluates the candidate score in parallel, but the policy ignores it when the paired applicability probability is below `0.5`.
+
+The final action is ordinary code. A strong security signal or low applicable correctness can request changes. High merge probability, sufficiently confident Scores, and low need for human review can approve. Ambiguous key signals escalate rather than guess. Everything else produces a non-blocking comment result.
+
+Large diffs make the experiment less tidy. The CLI ignores configured low-value files, estimates a context budget, tries to keep source with tests, and makes one Jev call per slice when needed. The worst slice decision wins; Scores are not averaged. An oversized individual file can still be truncated, so "reviewed" never means "the model saw the repository."
+
+There are important prototype limitations:
+
+- the thresholds are hand-written policy, not calibrated merge guarantees;
+- Jev returns risk signals, not file-and-line diagnoses;
+- incomplete state can produce a confident answer to the wrong representation of the change;
+- slicing can hide relationships between files in different calls;
+- untracked files and unusual diffs need particularly careful collection;
+- a typed answer is structurally valid, not necessarily semantically correct.
+
+The checked-in SQL-injection fixture is a good illustration of the output shape: its sample report requests changes because `has_security_concern` crosses the configured threshold. It is an offline fixture, not evidence that this policy is ready to approve production changes unattended.
+
+# Experiment two: Jev beside an agent in DRS
+
+[DRS](https://github.com/manojlds/drs) explores the other composition. DRS is a workflow-first code-maintenance tool with an agent-backed reviewer. [PR #205](https://github.com/manojlds/drs/pull/205) added three review modes:
+
+- `agent`: the existing issue-producing review;
+- `jev`: a Jev scorecard without starting the agent runtime;
+- `combined`: both run independently over the same focused diff.
+
+DRS asks a broader pack: 19 engineering dimensions, each with applicability, a 1-10 Score, and a weakness Choice. That produces quality signals and coarse priorities, not source-located findings.
 
 ```mermaid
 flowchart TB
-  Diff[local git diff] --> State[bounded state: task, files, diff]
-  State --> Jev[one Jev call]
-  Jev --> Answers[Noul / Choice / Score]
-  Answers --> Policy[TypeScript policy]
-  Policy --> Decision[approve / comment / request_changes / escalate]
+  Diff[focused diff and bounded metadata] --> Agent[agent reviewer]
+  Diff --> Jev[Jev 19-dimension evaluation]
+  Agent --> Findings[file and line findings]
+  Jev --> Scorecard[quality signals and trends]
+  Findings --> Summary[DRS result]
+  Scorecard --> Summary
 ```
 
-I had already bolted Jev onto DRS ([PR #205](https://github.com/manojlds/drs/pull/205)): 19 quality dimensions, each with applicability + score + weakness, hanging next to the agent. That integration is real, and it hid the interesting part. The scorecard was optional color around an LLM review. The standalone CLI makes the composition the product.
+DRS deliberately keeps the outputs separate. A Jev weakness is rendered as a rubric hint, not converted into an invented inline comment. A high Score cannot override failing tests, unresolved findings, or project policy. In Jev-only mode, an empty `issues` array means no issue-producing reviewer ran; it does not mean the diff is clean.
 
-```mermaid
-flowchart TB
-  subgraph drs [DRS combined]
-    Diff1[PR diff] --> Agent[LLM reviewer]
-    Diff1 --> Jev19[Jev 19-metric pack]
-    Agent --> Findings[file/line comments]
-    Jev19 --> Scorecard[quality signals]
-    Findings --> Comment[PR comment]
-    Scorecard --> Comment
-  end
+The platform integration adds things the standalone CLI does not: GitHub and GitLab workflows, sanitized artifacts, retries, read-only Jev workflows, and first-run PR/MR baselines for per-dimension trends. It also has a larger security boundary because focused patches and bounded change metadata are sent to a remote API from CI.
 
-  subgraph cli [jev-review]
-    Diff2[local git diff] --> State2[bounded state]
-    State2 --> JevSmall[one Jev call]
-    JevSmall --> Policy2[TypeScript policy]
-    Policy2 --> Gate[merge decision]
-  end
-```
+# What the two experiments taught me
 
-DRS still writes the essay. This CLI does not. If you want "why is this line wrong?", use DRS. If you want "is this mergeable, and how sure are we?", use Jev.
+The two implementations use the same model but assign it different authority.
 
-# The question pack is small on purpose
+| | `jev-review` | DRS |
+| --- | --- | --- |
+| Role for Jev | Primary merge signal | Independent quality evaluator |
+| Output | Four-way policy decision and scorecard | Advisory scorecard and trends |
+| Explanations | No file/line findings | Agent produces actionable findings |
+| Input | Local diff, commit/range, or patch | Local, GitHub PR, or GitLab MR workflow state |
+| Large changes | Multiple conservatively combined slices | Shared filtering and context compression |
+| Automation | Exit code can gate CI | Jev does not set merge status in v1 |
 
-There's another [jev-review](https://github.com/NiazMorshed2007/jev-review) in the wild that's a quality loop for a coding agent: nineteen dimensions, 1–10 scores, a weakness choice per metric. That's ~57 questions. Fine for an agent iterating on its own code. It's the wrong pack for a merge gate.
+The standalone tool makes policy easy to see and test, but every threshold becomes consequential. The DRS integration is safer about authority, but a broad scorecard is easier to admire than to act on.
 
-I started with four scores (correctness, test coverage, security, blast radius), three merge gates, and a couple of classifications. Then I stole three more merge-relevant dimensions and stopped:
+Both exposed the same deeper problem: **state construction is part of model correctness**. If a patch is missing, the task is stale, or relevant files are compressed away, no question wording recovers the evidence. Probability communicates the model's uncertainty about the state it received, not whether your application assembled the right state.
 
-| Score | Higher means |
-| --- | --- |
-| correctness | the change does what the task says |
-| test_gap | tests cover the changed behavior |
-| security | less new exposure |
-| blast_radius | **more** impact elsewhere |
-| reliability | failure paths are handled |
-| changeability | the next conceptual edit is local |
-| compatibility | existing contracts still hold |
+That is why I now think of Jev as neither "a tiny LLM" nor "a classifier API." The useful abstraction is a programmable set of probabilistic judgments. Jev handles those judgments; code composes them; an LLM or human can investigate when the workflow needs an explanation.
 
-Blast radius is "what else breaks **now**." Changeability is "how hard is the **next** edit." Compatibility is conditional: if the diff doesn't touch a public API, migration, or integration, the score is `n/a`, not a fake 4.
-
-Each score has an applicability Noul. Jev still answers the score (speculative fan-out). Policy uses it only when applicability is at least 0.5. A docs-only change does not fail because test coverage scored 0. Missing evidence is not a zero.
-
-The merge gates stay independent of the scores:
-
-- `safe_to_merge`
-- `needs_human_review`
-- `has_security_concern`
-
-That independence is not a bug. I stared at a report where `safe_to_merge` was 0.78 and `needs_human_review` was 0.72 and thought: if a human should look, how is it safe?
-
-Because they are different questions. "Probably fine to merge" and "a person should glance at this" can both be true. Policy encodes that: approve only if `safe_to_merge` is high **and** `needs_human_review` is low. Mid on both is `comment`, not `approve`.
-
-# Policy is the reviewer
-
-Thresholds live in TypeScript so they can change without rewriting prompts.
-
-```mermaid
-flowchart TB
-  Start[Jev answers] --> Sec{security concern at least 0.7?}
-  Sec -->|yes| RC[request_changes]
-  Sec -->|no| Cor{applicable correctness below 2?}
-  Cor -->|yes| RC
-  Cor -->|no| App{safe_to_merge at least 0.8 and high confidence and needs_human_review below 0.5?}
-  App -->|yes| OK[approve]
-  App -->|no| Unc{winning questions uncertain?}
-  Unc -->|yes| ES[escalate]
-  Unc -->|no| CM[comment]
-```
-
-`escalate` is not a hard block. It means "the probabilities are too close to 0.5 to act." Exit code 2. A CI job can page a human instead of pretending it knows.
-
-The new scores (reliability, changeability, compatibility) are **comment caveats**, not merge blocks. A 2.5 on changeability should not `request_changes`. A concrete security Noul should.
-
-# A real run
-
-I pointed the CLI at its own commit that added those three scores. Jev saw the commit message as the task, the patch as the state, and came back with:
-
-**Decision:** `comment`
-**Rule:** `mergeable_with_caveats`
-
-- `safe_to_merge` 0.78 — close to approve, not over the line
-- `needs_human_review` 0.72 — so policy would not have approved anyway
-- `has_security_concern` 0.29 — no security gate
-- correctness 3.7, tests 3.0, security 3.4
-- blast radius 1.0 — local
-- changeability 2.5 — "next edit is hard", and that's the caveat the rule cited
-- compatibility **n/a** — adding review dimensions is not a public API change
-- `change_kind` feature, 100%
-- 12,439 input tokens, 695 output
-
-That's the shape I wanted. Not "here's a paragraph about your abstraction." A decision, which rule fired, and a scorecard you can argue with.
-
-The report also prints the **captured task**. Early runs used a generic fallback ("review this diff") and Jev reasonably scored things against nothing. Local git reviews now take the commit message(s) for the range. `--task` overrides the intent; the git messages still go along as extra state.
-
-# Context is a packing problem
-
-Jev's request budget is about 32k tokens for the whole call. The first live run on this repo blew that immediately: lockfiles. So the CLI ignores lockfiles, images, wasm, and whatever you put in `jev-review.config.json`.
-
-The next failure mode is a huge *source* diff. Dumping the tree and truncating the tail is how you silently drop tests. Asking Jev to classify "important files" first is how you underweight tests on purpose.
-
-The packer estimates tokens (~3 characters per token), reserves ~12k for the 23-question pack, groups each source file with its tests, and splits into slices only if it still doesn't fit. Slice decisions combine conservatively: any `request_changes` or `escalate` wins; `approve` only if every slice would approve. Scores are not averaged. The report lists each slice.
-
-The SDK does not have a client-side token counter. You find out the real usage after the call. The estimate is deliberately pessimistic.
-
-# What I am not doing
-
-This is not DRS. No PR comments, no GitHub Action, no file:line findings.
-
-This is not a 19-metric quality dashboard. Readability, maintainability, performance-as-a-score — those help an agent iterate. They don't belong on `approve`.
-
-Jev will not tell you *why* a line is wrong. The scorecard says "diagnose causes in the diff before changing code" because that's your job, or DRS's job. System One classifies. System Two (you, or an LLM) explains.
-
-# Try it
+# Try the code-review prototype
 
 ```bash
 git clone https://github.com/manojlds/jev-review
 cd jev-review
 pnpm install
-export TYPESAFE_API_KEY=...    # early access: https://console.typesafe.ai/
+export TYPESAFE_API_KEY=... # https://console.typesafe.ai/
 pnpm review --output jev-review.md
 ```
 
-`--commit HEAD` reviews that commit's patch and uses its message as the task. `--base main` includes uncommitted work. `--json` if you want to pipe it.
+`--commit HEAD` reviews one commit and uses its message as the task. `--base main` reviews the current tracked work against `main`. `--task` supplies explicit intent, and `--json` produces machine-readable output.
 
-Exit codes: `0` approve or comment, `1` request changes, `2` escalate.
+Exit code `0` means approve or non-blocking comment, `1` means request changes or a tool failure, and `2` means escalate. Treat those defaults as prototype policy, not universal truth.
 
-The interesting file is [`src/policy.ts`](https://github.com/manojlds/jev-review/blob/main/src/policy.ts). The questions are the API. The policy is the reviewer.
+Start with [`src/questions.ts`](https://github.com/manojlds/jev-review/blob/main/src/questions.ts) and [`src/policy.ts`](https://github.com/manojlds/jev-review/blob/main/src/policy.ts). The first file defines what the model is allowed to decide. The second defines what the software does about it. That boundary is the point.
