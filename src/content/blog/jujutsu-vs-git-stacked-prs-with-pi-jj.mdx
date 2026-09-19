@@ -1,0 +1,264 @@
+---
+title: "Jujutsu for Stacked PRs with pi-jj"
+excerpt: "Where Jujutsu differs from Git in day-to-day stacked PR work, and how I use pi-jj for checkpoints, publish, sync, and closeout."
+date: 2026-03-01
+reading_time: 11 mins
+categories: [git, jj, productivity, developer-tools, ai]
+tags: [jujutsu, git, stacked-prs, pi, pi-jj, checkpoints]
+comments: true
+hero_image: /images/jujutsu-vs-git-stacked-prs-with-pi-jj-hero-v3.svg
+---
+
+I have used Git for years, and I still like it. But once you start doing lots of stacked pull requests, Git branch workflows can get noisy fast.
+
+Jujutsu (jj) gave me a cleaner mental model for stacked work. Then I built and used `pi-jj` on top of it so I can:
+
+- checkpoint repository state while I work with an agent,
+- rewind to known points,
+- plan and publish stacked PRs,
+- sync and retarget PR bases after merges.
+
+This post is a practical walkthrough of what changed for me.
+
+# Where jj differs from Git
+
+The biggest shift is this: in jj, **change** and **commit** are separate concepts.
+
+- **Change (`change_id`)**: logical unit of work
+- **Commit (`commit_id`)**: one snapshot of that work at a point in time
+- **Bookmark**: remote-pushable pointer, similar to branch usage in Git workflows
+- **Operation**: full repo state checkpoint in jj's operation log
+
+In Git, we usually think in branch + commits. In jj, I think in change stack + bookmarks.
+
+That sounds subtle, but it helps a lot when rewriting a stack.
+
+## Why this matters for stacked PRs
+
+With Git, stacked PRs usually become:
+
+- branch A -> PR A
+- branch B from A -> PR B
+- branch C from B -> PR C
+
+Then rebases and branch updates can feel brittle, especially with many open PRs.
+
+With jj, I keep a linear stack of changes and republish bookmarks as needed. The change identity stays stable while commits can be rewritten.
+
+# Advantages I have seen with jj for stacked PRs
+
+1. **Cleaner rewrite story**
+   - Amending lower changes and republishing descendants is simpler.
+2. **Stable unit of work**
+   - `change_id` gives continuity across rewrites.
+3. **Better stack introspection**
+   - You can query mutable ancestors/descendants around current work.
+4. **Operation-level recovery**
+   - `jj op` history makes it easier to recover when experiments go sideways.
+
+None of this means Git is bad. It just means jj fits stacked review workflows really well.
+
+# What pi-jj adds on top
+
+`pi-jj` is a Pi extension package focused on jj workflows.
+
+## 1) Checkpoints while you work
+
+On each prompt turn, it captures checkpoint metadata (revision, change id, operation ids) and stores it in session entries.
+
+That gives rewind options from Pi UI flows (`/tree`, `/fork`) and `/jj-checkpoints`.
+
+Example command:
+
+```text
+/jj-checkpoints plain
+```
+
+Example output:
+
+```text
+jj checkpoints (5)
+b2efcaa9  rev:0dc8bb706abe  chg:rtnmnvnvllrr  op:eb015e293f21  30s ago
+...
+```
+
+## 2) Stack status and plan UI
+
+```text
+/jj-stack-status
+/jj-pr-plan
+```
+
+`/jj-stack-status` is interactive now. You can inspect entries, copy IDs, run quick actions.
+
+`/jj-pr-plan` is also interactive and shows:
+
+- bookmark name (`push-<change-short>`)
+- base target
+- dry-run push intent
+
+## 3) Publish and sync workflow
+
+```text
+/jj-pr-publish --dry-run
+/jj-pr-publish
+/jj-pr-sync
+```
+
+Publish now supports:
+
+- dry-run first mode prompt
+- live progress in status bar
+- auto-refresh PR state before publish/dry-run
+- auto-refresh after real publish
+
+Sync handles state refresh and base retargeting after lower PRs merge.
+
+## 4) Stack closeout
+
+After all PRs are merged:
+
+```text
+/jj-stack-close --dry-run
+/jj-stack-close
+```
+
+This can:
+
+- verify no open PRs (unless forced),
+- delete stack `push-*` bookmarks,
+- push deletions,
+- create a new change from `main@origin`.
+
+# Skill and tool support
+
+If you use Pi skills, there is a packaged skill:
+
+```text
+/skill:jj-stacked-pr
+```
+
+It follows a safe flow:
+
+1. status
+2. optional plan
+3. dry-run publish
+4. real publish after explicit confirmation
+5. sync
+6. optional stack close
+
+There is also a tool callable by the model:
+
+- `jj_stack_pr_flow`
+- actions: `status`, `plan`, `publish`, `sync`, `close`, etc.
+
+By default it executes directly. It can queue follow-ups only if you pass `queue=true`.
+
+# Example workflow I use
+
+## Start from main
+
+```bash
+jj git fetch --all-remotes
+jj new main@origin -m "feat: start stack"
+```
+
+## Build stack changes
+
+```bash
+# edit files
+jj commit -m "feat: add CI workflow"
+
+# edit files
+jj commit -m "feat: add npm publish workflow"
+
+# edit files
+jj commit -m "feat: improve stack status UI"
+```
+
+## Inspect and dry-run
+
+```text
+/jj-stack-status
+/jj-pr-publish --dry-run
+```
+
+Example dry-run style output:
+
+```text
+remote: origin
+mode: dry-run
+entries: 3
+
+1. abcdef12 -> push-abcdef12 (base main)
+   state: MERGED
+2. bcdefa23 -> push-bcdefa23 (base main)
+   state: OPEN
+3. cdefab34 -> push-cdefab34 (base push-bcdefa23)
+   state: MISSING
+```
+
+## Publish and sync
+
+```text
+/jj-pr-publish
+/jj-pr-sync
+```
+
+Example stack status summary after publish:
+
+```text
+stack:
+1. abcdef12 rev:... add CI workflow (pr:#21 merged)
+2. bcdefa23 rev:... add npm publish workflow (pr:#22 open)
+3. cdefab34 rev:... improve stack status UI (pr:#23 open)
+```
+
+## Merge lower PRs, then continue
+
+After merging lower PRs, I run:
+
+```text
+/jj-pr-sync
+```
+
+If GitHub still shows conflict on a descendant PR, I rebase from the first unmerged change and republish.
+
+```bash
+jj git fetch --all-remotes
+jj rebase -s <first-unmerged-change-short> -d main@origin
+```
+
+Then:
+
+```text
+/jj-pr-publish --dry-run
+/jj-pr-publish
+/jj-pr-sync
+```
+
+# Notes from real usage
+
+A few things that helped me avoid pain:
+
+- Dry-run should show real PR state, not fake placeholders.
+- Publish should refresh state before and after, so status stays trustworthy.
+- Sync is still useful after merges if you want explicit reconciliation.
+- Closeout should fetch before deletion push and retry once on stale-ref errors.
+
+# Final thoughts
+
+If you do occasional single-PR work, Git alone is fine.
+
+If you do stacked review-heavy work often, jj's change model is a better fit in my experience.
+
+And if you are using Pi agents a lot, adding checkpoint + stack orchestration (`pi-jj`) makes the workflow much less fragile.
+
+You get:
+
+- safer experimentation,
+- better rewind points,
+- clearer stacked PR publishing,
+- cleaner closeout after merges.
+
+That is a solid quality-of-life improvement for day-to-day development.

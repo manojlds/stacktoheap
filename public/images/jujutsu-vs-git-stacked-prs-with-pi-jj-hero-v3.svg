@@ -1,0 +1,78 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Jujutsu vs Git with Stacked PRs and Pi Coding Agent</title>
+  <desc id="desc">A visual hero banner showing Git and Jujutsu workflows, stacked pull requests, and a Pi coding agent coordinating the stack.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="100" y1="50" x2="1500" y2="850" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#081027"/>
+      <stop offset="0.5" stop-color="#14213D"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="250" y1="240" x2="1180" y2="780" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06B6D4" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#22C55E" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="prCard" x1="0" y1="0" x2="440" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E293B"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" rx="32" fill="url(#bg)"/>
+  <circle cx="1320" cy="100" r="220" fill="#0EA5E9" fill-opacity="0.14"/>
+  <circle cx="240" cy="810" r="240" fill="#22C55E" fill-opacity="0.1"/>
+  <rect x="140" y="150" width="1320" height="620" rx="30" fill="url(#accent)" stroke="#1E293B" stroke-width="2"/>
+
+  <text x="190" y="252" fill="#E2E8F0" font-size="66" font-family="'Segoe UI', 'Trebuchet MS', sans-serif" font-weight="700">Jujutsu + Git for Stacked PRs</text>
+  <text x="190" y="302" fill="#94A3B8" font-size="34" font-family="'Segoe UI', 'Trebuchet MS', sans-serif">with a Pi coding agent in the loop</text>
+
+  <g filter="url(#softGlow)">
+    <rect x="190" y="370" width="440" height="300" rx="20" fill="#0B1220" stroke="#334155"/>
+    <text x="220" y="420" fill="#F8FAFC" font-size="32" font-family="'Segoe UI', 'Trebuchet MS', sans-serif" font-weight="700">Git</text>
+    <text x="220" y="470" fill="#CBD5E1" font-size="24" font-family="'Consolas', 'Courier New', monospace">branch-a  -&gt;  PR-1</text>
+    <text x="220" y="510" fill="#CBD5E1" font-size="24" font-family="'Consolas', 'Courier New', monospace">branch-b  -&gt;  PR-2</text>
+    <text x="220" y="550" fill="#CBD5E1" font-size="24" font-family="'Consolas', 'Courier New', monospace">branch-c  -&gt;  PR-3</text>
+    <text x="220" y="605" fill="#F59E0B" font-size="20" font-family="'Segoe UI', 'Trebuchet MS', sans-serif">rebases can get noisy</text>
+  </g>
+
+  <g filter="url(#softGlow)">
+    <rect x="680" y="370" width="440" height="300" rx="20" fill="#09131F" stroke="#0EA5E9" stroke-opacity="0.7"/>
+    <text x="710" y="420" fill="#F8FAFC" font-size="32" font-family="'Segoe UI', 'Trebuchet MS', sans-serif" font-weight="700">jj</text>
+    <text x="710" y="470" fill="#BAE6FD" font-size="24" font-family="'Consolas', 'Courier New', monospace">change-1  -&gt;  push-1</text>
+    <text x="710" y="510" fill="#BAE6FD" font-size="24" font-family="'Consolas', 'Courier New', monospace">change-2  -&gt;  push-2</text>
+    <text x="710" y="550" fill="#BAE6FD" font-size="24" font-family="'Consolas', 'Courier New', monospace">change-3  -&gt;  push-3</text>
+    <text x="710" y="605" fill="#22C55E" font-size="20" font-family="'Segoe UI', 'Trebuchet MS', sans-serif">stable change IDs, cleaner rewrites</text>
+  </g>
+
+  <g>
+    <path d="M635 520C650 520 660 520 674 520" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"/>
+    <path d="M1125 520C1140 520 1150 520 1164 520" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"/>
+    <path d="M1160 515L1182 520L1160 525" fill="#94A3B8"/>
+  </g>
+
+  <g filter="url(#softGlow)">
+    <rect x="1180" y="350" width="260" height="340" rx="20" fill="#07101E" stroke="#22C55E" stroke-opacity="0.8"/>
+    <text x="1212" y="402" fill="#ECFEFF" font-size="30" font-family="'Segoe UI', 'Trebuchet MS', sans-serif" font-weight="700">Pi Agent</text>
+    <rect x="1218" y="430" width="184" height="96" rx="12" fill="#0B1B2F" stroke="#0EA5E9"/>
+    <text x="1232" y="468" fill="#67E8F9" font-size="20" font-family="'Consolas', 'Courier New', monospace">/jj-pr-plan</text>
+    <text x="1232" y="498" fill="#67E8F9" font-size="20" font-family="'Consolas', 'Courier New', monospace">/jj-pr-sync</text>
+
+    <rect x="1218" y="546" width="184" height="110" rx="12" fill="url(#prCard)" stroke="#334155"/>
+    <text x="1232" y="585" fill="#E2E8F0" font-size="18" font-family="'Segoe UI', 'Trebuchet MS', sans-serif">Stacked PRs</text>
+    <text x="1232" y="614" fill="#86EFAC" font-size="17" font-family="'Consolas', 'Courier New', monospace">PR-1  merged</text>
+    <text x="1232" y="638" fill="#BFDBFE" font-size="17" font-family="'Consolas', 'Courier New', monospace">PR-2  open</text>
+  </g>
+
+  <g opacity="0.65">
+    <circle cx="1450" cy="744" r="4" fill="#38BDF8"/>
+    <circle cx="1472" cy="744" r="4" fill="#38BDF8"/>
+    <circle cx="1494" cy="744" r="4" fill="#38BDF8"/>
+  </g>
+</svg>
