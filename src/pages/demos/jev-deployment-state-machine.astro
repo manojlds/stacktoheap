@@ -1,0 +1,30 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import DeploymentTraceExplorer from '@/components/DeploymentTraceExplorer.astro';
+import healthy from '@/data/jev-deployment-traces/healthy-canary-live.json';
+import regression from '@/data/jev-deployment-traces/clear-regression-live.json';
+import transient from '@/data/jev-deployment-traces/transient-noise-uncertain-live.json';
+import conflicting from '@/data/jev-deployment-traces/conflicting-signals-live.json';
+import freeze from '@/data/jev-deployment-traces/change-freeze-live.json';
+
+const traces = [healthy, regression, transient, conflicting, freeze];
+---
+
+<BaseLayout
+  title="Jev deployment state-machine trace"
+  description="Replay synthetic canary deployments where Jev chooses only among enabled state-machine transitions."
+>
+  <div class="container py-10 md:py-16">
+    <header class="mx-auto mb-8 max-w-3xl text-center">
+      <p class="text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground">Interactive experiment</p>
+      <h1 class="mt-3 text-3xl font-extrabold tracking-tight md:text-5xl">The machine owns control. Jev chooses at the branches.</h1>
+      <p class="mt-4 text-lg text-muted-foreground">
+        These are captured <code>jev-1.13.0</code> decisions over synthetic deployment telemetry. Use the timeline to inspect what Jev chose, what policy permitted, and what the environment later reported.
+      </p>
+    </header>
+    <DeploymentTraceExplorer traces={traces} />
+    <p class="mx-auto mt-5 max-w-3xl text-center text-sm text-muted-foreground">
+      No model runs in this page. It replays sanitized JSON captured on September 20, 2026.
+    </p>
+  </div>
+</BaseLayout>

@@ -1,0 +1,11 @@
+<div class="article-breakout">
+  <slot />
+</div>
+
+<style>
+  .article-breakout {
+    width: min(72rem, calc(100vw - 2rem));
+    margin: 2.5rem 0 2.5rem 50%;
+    transform: translateX(-50%);
+  }
+</style>

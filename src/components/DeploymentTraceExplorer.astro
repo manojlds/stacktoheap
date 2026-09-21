@@ -1,0 +1,513 @@
+---
+interface Snapshot {
+  value: string;
+  context: Record<string, unknown>;
+  steps: number;
+}
+
+interface TraceFrame {
+  kind: string;
+  status: string;
+  before: Snapshot;
+  after: Snapshot;
+  enabledChoices: Array<{ event: string; description: string }>;
+  selection?: {
+    event: string;
+    confidence: number;
+    probabilities?: Record<string, number | undefined>;
+    metadata?: Record<string, unknown>;
+  };
+  selectedBy?: string;
+  policy?: {
+    accepted: boolean;
+    observedConfidence: number;
+    observedMargin?: number;
+    minConfidence: number;
+    minMargin: number;
+  };
+  transition?: { source: string; event: string; target: string; control: string };
+  systemEvent?: string;
+  action?: { id: string; status: string; emittedSystemEvent?: string };
+}
+
+interface DeploymentTrace {
+  scenario: { id: string; seed: number };
+  evaluator: { kind: string; model?: string };
+  capturedAt: string;
+  outcome: { status: string; finalState: string; frameCount: number };
+  frames: TraceFrame[];
+}
+
+interface Props {
+  traces: DeploymentTrace[];
+}
+
+const { traces } = Astro.props;
+if (!traces.length) throw new Error('DeploymentTraceExplorer needs at least one trace');
+
+const labels: Record<string, string> = {
+  'healthy-canary': 'Healthy canary',
+  'clear-regression': 'Clear regression',
+  'transient-noise': 'Transient noise',
+  'conflicting-signals': 'Conflicting signals',
+  'unsafe-promotion-trap': 'Change freeze',
+};
+const stateLabels: Record<string, string> = {
+  observing: 'Observing',
+  assessing: 'Assessing',
+  holding: 'Holding',
+  shiftingTraffic: 'Shift traffic',
+  rollingBack: 'Rollback',
+  humanReview: 'Human review',
+  fullyDeployed: 'Fully deployed',
+  rolledBack: 'Rolled back',
+};
+const initialTrace = traces[0];
+const initialFrame = initialTrace.frames[0];
+const initialContext = initialFrame.after.context;
+const serialized = JSON.stringify(traces).replaceAll('<', '\u003c');
+
+const percent = (value: unknown) =>
+  typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : '—';
+const number = (value: unknown) =>
+  typeof value === 'number' ? new Intl.NumberFormat('en-US').format(value) : '—';
+const ownerForFrame = (frame: TraceFrame) => {
+  if (frame.kind === 'decision' && frame.selectedBy === 'jev') {
+    return {
+      key: 'jev',
+      badge: 'Jev invoked',
+      title: `Jev selected ${frame.selection?.event ?? 'a transition'}`,
+      detail: 'The machine supplied only the enabled choices; policy decides whether the selection may execute.',
+    };
+  }
+  if (frame.kind === 'decision') {
+    return {
+      key: 'deterministic',
+      badge: 'Jev bypassed',
+      title: `Code selected ${frame.selection?.event ?? 'the only transition'}`,
+      detail: 'Only one decision was enabled, so the runtime did not call Jev.',
+    };
+  }
+  if (frame.kind === 'system') {
+    return {
+      key: 'system',
+      badge: 'Jev not invoked',
+      title: `Environment reported ${frame.systemEvent ?? frame.transition?.event ?? 'a fact'}`,
+      detail: 'This factual system event came from the simulation, not from the model.',
+    };
+  }
+  return {
+    key: 'runtime',
+    badge: 'Jev not invoked',
+    title: `Runtime status: ${frame.status}`,
+    detail: 'The runtime recorded a status without asking the model to choose.',
+  };
+};
+const initialOwner = ownerForFrame(initialFrame);
+---
+
+<section class="dte not-prose" data-deployment-explorer aria-label="Interactive Jev deployment trace">
+  <header class="dte-header">
+    <div>
+      <p class="dte-eyebrow">Live Jev trace · synthetic telemetry</p>
+      <h2>Who controls the next transition?</h2>
+      <p>
+        Replay one frame at a time. Pink marks a model-eligible branch; the execution banner shows whether Jev actually ran.
+      </p>
+    </div>
+    <div class="dte-run-meta">
+      <span data-model>{initialTrace.evaluator.model ?? initialTrace.evaluator.kind}</span>
+      <span data-outcome>{initialTrace.outcome.status}</span>
+    </div>
+  </header>
+
+  <div class="dte-toolbar" aria-label="Trace controls">
+    <label>
+      <span>Scenario</span>
+      <select data-scenario>
+        {traces.map((trace, index) => (
+          <option value={index}>{labels[trace.scenario.id] ?? trace.scenario.id}</option>
+        ))}
+      </select>
+    </label>
+    <div class="dte-buttons">
+      <button type="button" data-action="restart" aria-label="Restart trace">↺ <span>Restart</span></button>
+      <button type="button" data-action="previous" aria-label="Previous trace frame">← <span>Previous</span></button>
+      <button type="button" data-action="play" aria-label="Play trace">▶ <span>Play</span></button>
+      <button type="button" data-action="next" aria-label="Next trace frame"><span>Next</span> →</button>
+    </div>
+    <p class="dte-position" data-position aria-live="polite">Step 1 of {initialTrace.frames.length}</p>
+  </div>
+
+  <div class:list={['dte-owner', initialOwner.key]} data-owner aria-live="polite">
+    <span data-owner-badge>{initialOwner.badge}</span>
+    <strong data-owner-title>{initialOwner.title}</strong>
+    <small data-owner-detail>{initialOwner.detail}</small>
+  </div>
+
+  <div class="dte-grid">
+    <section class="dte-panel dte-machine-panel" aria-labelledby="dte-machine-title">
+      <div class="dte-panel-heading">
+        <div>
+          <p class="dte-kicker">Deterministic control flow</p>
+          <h3 id="dte-machine-title">Deployment machine</h3>
+        </div>
+        <div class="dte-legend" aria-label="Transition legend">
+          <span><i class="decision"></i> Model-eligible branch</span>
+          <span><i class="system"></i> System fact</span>
+        </div>
+      </div>
+
+      <div class="dte-map-scroll">
+        <svg class="dte-map" viewBox="0 0 820 260" role="img" data-map-label aria-label={`Current state: ${stateLabels[initialFrame.after.value] ?? initialFrame.after.value}`}>
+          <defs>
+            <marker id="dte-arrow-decision" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" /></marker>
+            <marker id="dte-arrow-system" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" /></marker>
+          </defs>
+          <g class="dte-edges">
+            <path data-edge="observing:assessing" class="system" d="M130 102 L226 102" />
+            <path data-edge="observing:fullyDeployed" class="system" d="M88 78 C180 8 590 8 676 54" />
+            <path data-edge="assessing:shiftingTraffic" class="decision" d="M322 89 C372 59 405 54 448 54" />
+            <path data-edge="assessing:holding" class="decision" d="M326 104 L448 116" />
+            <path data-edge="assessing:rollingBack" class="decision" d="M318 119 C370 156 405 177 448 184" />
+            <path data-edge="assessing:humanReview" class="decision" d="M324 106 C470 98 560 106 648 116" />
+            <path data-edge="holding:observing" class="system" d="M448 128 C330 238 120 225 87 128" />
+            <path data-edge="shiftingTraffic:observing" class="system" d="M448 42 C340 10 170 17 100 77" />
+            <path data-edge="shiftingTraffic:humanReview" class="system" d="M548 62 C590 72 620 93 655 108" />
+            <path data-edge="rollingBack:rolledBack" class="system" d="M548 190 L670 190" />
+            <path data-edge="rollingBack:humanReview" class="system" d="M540 177 C585 158 620 137 658 128" />
+            <path data-edge="humanReview:observing" class="system" d="M648 132 C510 242 180 245 87 128" />
+            <path data-edge="humanReview:rolledBack" class="system" d="M718 140 L718 166" />
+          </g>
+          {[
+            ['observing', 30, 78], ['assessing', 226, 78], ['shiftingTraffic', 448, 30],
+            ['holding', 448, 92], ['rollingBack', 448, 166], ['humanReview', 648, 104],
+            ['fullyDeployed', 670, 30], ['rolledBack', 670, 166],
+          ].map(([state, x, y]) => (
+            <g data-state={state} class:list={['dte-state', { active: initialFrame.after.value === state }]} transform={`translate(${x} ${y})`}>
+              <rect width="100" height="48" rx="12" />
+              <text x="50" y="29" text-anchor="middle">{stateLabels[String(state)]}</text>
+            </g>
+          ))}
+        </svg>
+      </div>
+      <div class="dte-transition" data-transition>
+        <span class:list={['dte-kind', initialOwner.key]}>{initialOwner.key}</span>
+        <strong>{initialFrame.transition?.event ?? initialFrame.selection?.event ?? initialFrame.systemEvent ?? initialFrame.status}</strong>
+        <span>{stateLabels[initialFrame.before.value]} → {stateLabels[initialFrame.after.value]}</span>
+      </div>
+    </section>
+
+    <section class="dte-panel" aria-labelledby="dte-telemetry-title">
+      <div class="dte-panel-heading">
+        <div>
+          <p class="dte-kicker">Observed state</p>
+          <h3 id="dte-telemetry-title">Canary evidence</h3>
+        </div>
+        <span class="dte-traffic"><b data-traffic>{String(initialContext.trafficPercent ?? '—')}%</b> traffic</span>
+      </div>
+      <div class="dte-metrics">
+        <div><span>Baseline errors</span><strong data-metric="baselineErrorRate">{percent(initialContext.baselineErrorRate)}</strong></div>
+        <div><span>Canary errors</span><strong data-metric="canaryErrorRate">{percent(initialContext.canaryErrorRate)}</strong></div>
+        <div><span>Baseline p95</span><strong data-metric="baselineP95LatencyMs">{number(initialContext.baselineP95LatencyMs)} ms</strong></div>
+        <div><span>Canary p95</span><strong data-metric="canaryP95LatencyMs">{number(initialContext.canaryP95LatencyMs)} ms</strong></div>
+        <div><span>Canary requests</span><strong data-metric="canaryRequests">{number(initialContext.canaryRequests)}</strong></div>
+        <div><span>Evidence</span><strong data-metric="dataQuality">{String(initialContext.dataQuality ?? '—')}</strong></div>
+      </div>
+      <dl class="dte-facts">
+        <div><dt>Trend</dt><dd data-fact="trend">{String(initialContext.trend ?? '—')}</dd></div>
+        <div><dt>Rollback risk</dt><dd data-fact="rollbackRisk">{String(initialContext.rollbackRisk ?? '—')}</dd></div>
+        <div><dt>Change freeze</dt><dd data-fact="changeFreeze">{initialContext.changeFreeze ? 'active' : 'off'}</dd></div>
+      </dl>
+    </section>
+
+    <section class="dte-panel" aria-labelledby="dte-decision-title">
+      <div class="dte-panel-heading">
+        <div>
+          <p class="dte-kicker" data-decision-kicker>{initialOwner.key === 'jev' ? 'Jev output' : 'No model call'}</p>
+          <h3 id="dte-decision-title" data-decision-title>{initialOwner.key === 'jev' ? 'Jev choice' : 'Enabled choices'}</h3>
+        </div>
+        <span class="dte-confidence" data-confidence>—</span>
+      </div>
+      <div class="dte-probabilities" data-probabilities>
+        <p class="dte-empty">This frame contains an observed system event, not a Jev choice.</p>
+      </div>
+      <div class="dte-policy" data-policy>
+        <span>Policy</span><strong>Not evaluated on this frame</strong>
+      </div>
+    </section>
+
+    <section class="dte-panel dte-timeline-panel" aria-labelledby="dte-timeline-title">
+      <div class="dte-panel-heading">
+        <div>
+          <p class="dte-kicker">Audit trail</p>
+          <h3 id="dte-timeline-title">Transition timeline</h3>
+        </div>
+      </div>
+      <ol class="dte-timeline" data-timeline>
+        {initialTrace.frames.map((frame, index) => (
+          <li>
+            <button type="button" data-frame={index} aria-current={index === 0 ? 'step' : undefined}>
+              <span class:list={['dte-dot', ownerForFrame(frame).key]}></span>
+              <span><b>{frame.transition?.event ?? frame.selection?.event ?? frame.systemEvent ?? frame.status}</b><small>{ownerForFrame(frame).key}</small></span>
+            </button>
+          </li>
+        ))}
+      </ol>
+    </section>
+  </div>
+
+  <p class="dte-announcer sr-only" data-announcer aria-live="polite"></p>
+</section>
+
+<script type="application/json" data-deployment-traces set:html={serialized}></script>
+<script>
+  const stateNames: Record<string, string> = {
+    observing: 'Observing', assessing: 'Assessing', holding: 'Holding',
+    shiftingTraffic: 'Shift traffic', rollingBack: 'Rollback',
+    humanReview: 'Human review', fullyDeployed: 'Fully deployed', rolledBack: 'Rolled back',
+  };
+
+  const formatPercent = (value: unknown) =>
+    typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : '—';
+  const formatNumber = (value: unknown) =>
+    typeof value === 'number' ? new Intl.NumberFormat('en-US').format(value) : '—';
+  const frameOwner = (frame: any) => {
+    if (frame.kind === 'decision' && frame.selectedBy === 'jev') return 'jev';
+    if (frame.kind === 'decision') return 'deterministic';
+    if (frame.kind === 'system') return 'system';
+    return 'runtime';
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-deployment-explorer]:not([data-ready])').forEach((root) => {
+    root.dataset.ready = 'true';
+    const dataNode = root.nextElementSibling as HTMLScriptElement | null;
+    if (!dataNode?.matches('[data-deployment-traces]')) return;
+    const traces = JSON.parse(dataNode.textContent || '[]');
+    let scenarioIndex = 0;
+    let frameIndex = 0;
+    let timer: number | undefined;
+
+    const one = <T extends Element>(selector: string) => root.querySelector<T>(selector)!;
+    const scenario = one<HTMLSelectElement>('[data-scenario]');
+    const play = one<HTMLButtonElement>('[data-action="play"]');
+
+    const stop = () => {
+      if (timer !== undefined) window.clearInterval(timer);
+      timer = undefined;
+      play.innerHTML = '▶ <span>Play</span>';
+      play.setAttribute('aria-label', 'Play trace');
+    };
+
+    const renderTimeline = (trace: any) => {
+      one('[data-timeline]').innerHTML = trace.frames.map((frame: any, index: number) => `
+        <li><button type="button" data-frame="${index}" ${index === frameIndex ? 'aria-current="step"' : ''}>
+          <span class="dte-dot ${frameOwner(frame)}"></span>
+          <span><b>${frame.transition?.event ?? frame.selection?.event ?? frame.systemEvent ?? frame.status}</b><small>${frameOwner(frame)}</small></span>
+        </button></li>`).join('');
+    };
+
+    const render = (announce = false) => {
+      const trace = traces[scenarioIndex];
+      const frame = trace.frames[frameIndex];
+      const context = frame.after.context;
+      const owner = frameOwner(frame);
+      const eventLabel = frame.transition?.event ?? frame.selection?.event ?? frame.systemEvent ?? frame.status;
+
+      const ownerBanner = one('[data-owner]');
+      ownerBanner.className = `dte-owner ${owner}`;
+      if (owner === 'jev') {
+        one('[data-owner-badge]').textContent = 'Jev invoked';
+        one('[data-owner-title]').textContent = `Jev selected ${frame.selection.event}`;
+        one('[data-owner-detail]').textContent = 'The machine supplied only the enabled choices; policy decides whether the selection may execute.';
+      } else if (owner === 'deterministic') {
+        one('[data-owner-badge]').textContent = 'Jev bypassed';
+        one('[data-owner-title]').textContent = `Code selected ${frame.selection?.event ?? 'the only transition'}`;
+        one('[data-owner-detail]').textContent = 'Only one decision was enabled, so the runtime did not call Jev.';
+      } else if (owner === 'system') {
+        one('[data-owner-badge]').textContent = 'Jev not invoked';
+        one('[data-owner-title]').textContent = `Environment reported ${frame.systemEvent ?? frame.transition?.event}`;
+        one('[data-owner-detail]').textContent = 'This factual system event came from the simulation, not from the model.';
+      } else {
+        one('[data-owner-badge]').textContent = 'Jev not invoked';
+        one('[data-owner-title]').textContent = `Runtime status: ${frame.status}`;
+        one('[data-owner-detail]').textContent = 'The runtime recorded a status without asking the model to choose.';
+      }
+
+      one('[data-model]').textContent = trace.evaluator.model ?? trace.evaluator.kind;
+      one('[data-outcome]').textContent = trace.outcome.status;
+      one('[data-position]').textContent = `Step ${frameIndex + 1} of ${trace.frames.length}`;
+      one('[data-traffic]').textContent = `${context.trafficPercent ?? '—'}%`;
+      one('[data-map-label]').setAttribute('aria-label', `Current state: ${stateNames[frame.after.value] ?? frame.after.value}`);
+
+      root.querySelectorAll<SVGGElement>('[data-state]').forEach((node) =>
+        node.classList.toggle('active', node.dataset.state === frame.after.value));
+      root.querySelectorAll<SVGPathElement>('[data-edge]').forEach((edge) => {
+        const active = frame.transition && edge.dataset.edge === `${frame.transition.source}:${frame.transition.target}`;
+        edge.classList.toggle('active', Boolean(active));
+      });
+
+      const transition = one('[data-transition]');
+      transition.innerHTML = `<span class="dte-kind ${owner}">${owner}</span><strong>${eventLabel}</strong><span>${stateNames[frame.before.value] ?? frame.before.value} → ${stateNames[frame.after.value] ?? frame.after.value}</span>`;
+      one('[data-decision-kicker]').textContent = owner === 'jev' ? 'Jev output' : owner === 'deterministic' ? 'Model bypass' : 'No model call';
+      one('[data-decision-title]').textContent = owner === 'jev' ? 'Jev choice' : 'Enabled choices';
+
+      const metricFormats: Record<string, (value: unknown) => string> = {
+        baselineErrorRate: formatPercent, canaryErrorRate: formatPercent,
+        baselineP95LatencyMs: (value) => `${formatNumber(value)} ms`,
+        canaryP95LatencyMs: (value) => `${formatNumber(value)} ms`,
+        canaryRequests: formatNumber,
+        dataQuality: (value) => String(value ?? '—'),
+      };
+      Object.entries(metricFormats).forEach(([key, formatter]) => {
+        one(`[data-metric="${key}"]`).textContent = formatter(context[key]);
+      });
+      ['trend', 'rollbackRisk', 'changeFreeze'].forEach((key) => {
+        const value = key === 'changeFreeze' ? (context[key] ? 'active' : 'off') : String(context[key] ?? '—');
+        one(`[data-fact="${key}"]`).textContent = value;
+      });
+
+      const probabilities = frame.selection?.probabilities ?? {};
+      const probabilityPanel = one('[data-probabilities]');
+      if (frame.selection && owner === 'jev') {
+        probabilityPanel.innerHTML = frame.enabledChoices.map((choice: any) => {
+          const value = probabilities[choice.event] ?? 0;
+          const winner = choice.event === frame.selection.event;
+          return `<div class="dte-probability ${winner ? 'winner' : ''}">
+            <div><b>${choice.event}</b><span>${Math.round(value * 100)}%</span></div>
+            <div class="dte-bar" aria-label="${choice.event}: ${Math.round(value * 100)} percent"><i style="width:${value * 100}%"></i></div>
+          </div>`;
+        }).join('');
+        one('[data-confidence]').textContent = `confidence ${frame.selection.confidence.toFixed(2)}`;
+      } else {
+        probabilityPanel.innerHTML = `<p class="dte-empty">${owner === 'deterministic' ? 'The runtime bypassed Jev because only one decision was enabled.' : 'This frame did not invoke Jev.'}</p>`;
+        one('[data-confidence]').textContent = '—';
+      }
+
+      const policy = one('[data-policy]');
+      if (frame.policy) {
+        policy.className = `dte-policy ${frame.policy.accepted ? 'accepted' : 'blocked'}`;
+        policy.innerHTML = `<span>Policy</span><strong>${frame.policy.accepted ? 'Action allowed' : 'Stopped before effects'}</strong><small>threshold ${frame.policy.minConfidence.toFixed(2)} · margin ${frame.policy.minMargin.toFixed(2)}</small>`;
+      } else {
+        policy.className = 'dte-policy';
+        policy.innerHTML = '<span>Policy</span><strong>Not evaluated on this frame</strong>';
+      }
+
+      renderTimeline(trace);
+      one<HTMLButtonElement>('[data-action="previous"]').disabled = frameIndex === 0;
+      one<HTMLButtonElement>('[data-action="next"]').disabled = frameIndex === trace.frames.length - 1;
+      if (announce) {
+        one('[data-announcer]').textContent = `Step ${frameIndex + 1}: ${eventLabel}. Current state ${stateNames[frame.after.value] ?? frame.after.value}.`;
+      }
+    };
+
+    scenario.addEventListener('change', () => {
+      stop(); scenarioIndex = Number(scenario.value); frameIndex = 0; render(true);
+    });
+    root.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      const frameButton = target.closest<HTMLButtonElement>('[data-frame]');
+      if (frameButton) { stop(); frameIndex = Number(frameButton.dataset.frame); render(true); return; }
+      const action = target.closest<HTMLButtonElement>('[data-action]')?.dataset.action;
+      const last = traces[scenarioIndex].frames.length - 1;
+      if (action === 'restart') { stop(); frameIndex = 0; render(true); }
+      if (action === 'previous' && frameIndex > 0) { stop(); frameIndex--; render(true); }
+      if (action === 'next' && frameIndex < last) { stop(); frameIndex++; render(true); }
+      if (action === 'play') {
+        if (timer !== undefined) { stop(); return; }
+        if (frameIndex >= last) frameIndex = 0;
+        play.innerHTML = '❚❚ <span>Pause</span>';
+        play.setAttribute('aria-label', 'Pause trace');
+        timer = window.setInterval(() => {
+          if (frameIndex >= last) { stop(); return; }
+          frameIndex++; render(true);
+        }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1800 : 1100);
+        render(true);
+      }
+    });
+    render();
+  });
+</script>
+
+<style is:global>
+  .dte { --pink:#e551ba; --blue:#2389da; --green:#16865c; --amber:#b76e00; margin:2rem 0; color:hsl(var(--foreground)); font-family:ui-sans-serif,system-ui,sans-serif; }
+  .dte * { box-sizing:border-box; }
+  .dte-header { display:flex; justify-content:space-between; gap:2rem; align-items:flex-start; margin-bottom:1rem; }
+  .dte-header h2 { margin:.2rem 0 .45rem; font-size:clamp(1.35rem,3vw,2rem); line-height:1.1; }
+  .dte-header p { max-width:48rem; margin:0; color:hsl(var(--muted-foreground)); font-size:.9rem; }
+  .dte-eyebrow,.dte-kicker { color:var(--pink)!important; font-size:.68rem!important; font-weight:800; letter-spacing:.11em; text-transform:uppercase; }
+  .dte-run-meta { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.4rem; }
+  .dte-run-meta span,.dte-confidence,.dte-traffic { border:1px solid hsl(var(--border)); border-radius:999px; padding:.35rem .65rem; background:hsl(var(--muted)); font-size:.72rem; font-weight:700; white-space:nowrap; }
+  .dte-toolbar { display:flex; align-items:end; gap:1rem; padding:.8rem; border:1px solid hsl(var(--border)); border-radius:.75rem; background:hsl(var(--card)); }
+  .dte-toolbar label { display:grid; gap:.25rem; min-width:12rem; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  .dte-toolbar select,.dte-toolbar button { min-height:42px; border:1px solid hsl(var(--border)); border-radius:.5rem; background:hsl(var(--background)); color:hsl(var(--foreground)); font:inherit; }
+  .dte-toolbar select { padding:.45rem 2rem .45rem .65rem; }
+  .dte-buttons { display:flex; gap:.35rem; }
+  .dte-buttons button { padding:.45rem .7rem; font-size:.78rem; font-weight:700; cursor:pointer; }
+  .dte-buttons button:hover,.dte-buttons button:focus-visible,.dte-timeline button:focus-visible { outline:2px solid var(--pink); outline-offset:2px; }
+  .dte-buttons button:disabled { opacity:.4; cursor:not-allowed; }
+  .dte-position { margin:0 0 .65rem auto; color:hsl(var(--muted-foreground)); font-size:.78rem; font-variant-numeric:tabular-nums; }
+  .dte-owner { display:grid; grid-template-columns:auto 1fr; gap:.15rem .75rem; align-items:center; margin-top:.8rem; padding:.8rem 1rem; border:1px solid hsl(var(--border)); border-left-width:5px; border-radius:.7rem; background:hsl(var(--card)); }
+  .dte-owner > span { grid-row:span 2; padding:.3rem .55rem; border-radius:999px; color:white; font-size:.65rem; font-weight:850; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+  .dte-owner strong { font-size:.85rem; }
+  .dte-owner small { color:hsl(var(--muted-foreground)); font-size:.72rem; }
+  .dte-owner.jev { border-left-color:var(--pink); background:color-mix(in srgb,var(--pink) 7%,hsl(var(--card))); }
+  .dte-owner.jev > span { background:var(--pink); }
+  .dte-owner.system { border-left-color:var(--blue); background:color-mix(in srgb,var(--blue) 7%,hsl(var(--card))); }
+  .dte-owner.system > span { background:var(--blue); }
+  .dte-owner.deterministic { border-left-color:var(--green); background:color-mix(in srgb,var(--green) 7%,hsl(var(--card))); }
+  .dte-owner.deterministic > span { background:var(--green); }
+  .dte-owner.runtime > span { background:hsl(var(--muted-foreground)); }
+  .dte-grid { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(18rem,.6fr); gap:.8rem; margin-top:.8rem; }
+  .dte-panel { min-width:0; padding:1rem; border:1px solid hsl(var(--border)); border-radius:.8rem; background:hsl(var(--card)); box-shadow:0 8px 30px hsl(var(--foreground)/.04); }
+  .dte-panel-heading { display:flex; justify-content:space-between; gap:1rem; align-items:flex-start; }
+  .dte-panel-heading h3 { margin:.15rem 0 .8rem; font-size:1rem; }
+  .dte-panel-heading p { margin:0; }
+  .dte-machine-panel,.dte-timeline-panel { grid-column:1; }
+  .dte-machine-panel { grid-row:span 2; }
+  .dte-map-scroll { overflow-x:auto; padding:.25rem 0; }
+  .dte-map { display:block; width:100%; min-width:700px; }
+  .dte-edges path { fill:none; stroke-width:2; opacity:.38; }
+  .dte-edges path.decision { stroke:var(--pink); marker-end:url(#dte-arrow-decision); }
+  .dte-edges path.system { stroke:var(--blue); marker-end:url(#dte-arrow-system); stroke-dasharray:5 4; }
+  .dte-edges path.active { opacity:1; stroke-width:5; filter:drop-shadow(0 0 3px currentColor); }
+  #dte-arrow-decision path { fill:var(--pink); } #dte-arrow-system path { fill:var(--blue); }
+  .dte-state rect { fill:hsl(var(--background)); stroke:hsl(var(--border)); stroke-width:2; }
+  .dte-state text { fill:hsl(var(--foreground)); font-size:11px; font-weight:700; }
+  .dte-state.active rect { stroke:var(--pink); stroke-width:4; fill:color-mix(in srgb,var(--pink) 10%,hsl(var(--background))); }
+  .dte-legend { display:flex; flex-wrap:wrap; gap:.65rem; font-size:.68rem; color:hsl(var(--muted-foreground)); }
+  .dte-legend span { display:flex; align-items:center; gap:.3rem; }
+  .dte-legend i { width:1rem; border-top:3px solid; } .dte-legend i.decision{border-color:var(--pink)} .dte-legend i.system{border-color:var(--blue);border-top-style:dashed}
+  .dte-transition { display:flex; flex-wrap:wrap; align-items:center; gap:.55rem; padding:.7rem; border-radius:.55rem; background:hsl(var(--muted)); font-size:.78rem; }
+  .dte-transition > span:last-child { color:hsl(var(--muted-foreground)); }
+  .dte-kind { padding:.2rem .45rem; border-radius:999px; color:white; font-size:.62rem; font-weight:800; text-transform:uppercase; }
+  .dte-kind.jev,.dte-dot.jev{background:var(--pink)} .dte-kind.system,.dte-dot.system{background:var(--blue)} .dte-kind.deterministic,.dte-dot.deterministic{background:var(--green)} .dte-kind.runtime,.dte-dot.runtime{background:hsl(var(--muted-foreground))}
+  .dte-metrics { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
+  .dte-metrics div { padding:.65rem; border-radius:.55rem; background:hsl(var(--muted)); }
+  .dte-metrics span,.dte-facts dt { display:block; color:hsl(var(--muted-foreground)); font-size:.65rem; }
+  .dte-metrics strong { display:block; margin-top:.15rem; font-size:.9rem; font-variant-numeric:tabular-nums; }
+  .dte-facts { display:flex; flex-wrap:wrap; gap:.5rem 1rem; margin:.75rem 0 0; }
+  .dte-facts div { display:flex; gap:.35rem; } .dte-facts dd { margin:0; font-size:.7rem; font-weight:700; }
+  .dte-probabilities { min-height:8rem; }
+  .dte-probability { margin:.55rem 0; }
+  .dte-probability > div:first-child { display:flex; justify-content:space-between; font-size:.72rem; }
+  .dte-probability.winner b { color:var(--pink); }
+  .dte-bar { height:.45rem; margin-top:.25rem; overflow:hidden; border-radius:999px; background:hsl(var(--muted)); }
+  .dte-bar i { display:block; height:100%; border-radius:inherit; background:hsl(var(--muted-foreground)/.45); }
+  .dte-probability.winner .dte-bar i { background:var(--pink); }
+  .dte-empty { padding:1rem; color:hsl(var(--muted-foreground)); font-size:.78rem; text-align:center; }
+  .dte-policy { display:grid; grid-template-columns:auto 1fr; gap:.15rem .5rem; padding:.65rem; border:1px solid hsl(var(--border)); border-radius:.55rem; font-size:.7rem; }
+  .dte-policy span { color:hsl(var(--muted-foreground)); } .dte-policy small { grid-column:2; color:hsl(var(--muted-foreground)); }
+  .dte-policy.accepted { border-color:color-mix(in srgb,var(--green) 45%,transparent); background:color-mix(in srgb,var(--green) 9%,transparent); }
+  .dte-policy.blocked { border-color:color-mix(in srgb,var(--amber) 55%,transparent); background:color-mix(in srgb,var(--amber) 9%,transparent); }
+  .dte-timeline { display:flex; gap:.3rem; margin:0; padding:.15rem .15rem .5rem; overflow-x:auto; list-style:none; }
+  .dte-timeline li { flex:0 0 auto; }
+  .dte-timeline button { display:flex; align-items:center; gap:.4rem; min-width:7.4rem; padding:.5rem; border:1px solid hsl(var(--border)); border-radius:.5rem; background:hsl(var(--background)); color:hsl(var(--foreground)); text-align:left; cursor:pointer; }
+  .dte-timeline button[aria-current="step"] { border-color:var(--pink); box-shadow:inset 0 0 0 1px var(--pink); }
+  .dte-timeline b,.dte-timeline small { display:block; max-width:8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.65rem; }
+  .dte-timeline small { margin-top:.1rem; color:hsl(var(--muted-foreground)); font-weight:400; }
+  .dte-dot { width:.55rem; height:.55rem; flex:none; border-radius:50%; }
+  @media(max-width:850px){ .dte-grid{grid-template-columns:1fr}.dte-machine-panel,.dte-timeline-panel{grid-column:auto}.dte-machine-panel{grid-row:auto}.dte-header{display:block}.dte-run-meta{justify-content:flex-start;margin-top:.75rem}.dte-toolbar{align-items:stretch;flex-wrap:wrap}.dte-position{width:100%;margin:.2rem 0 0}.dte-toolbar label{flex:1}.dte-buttons{flex-wrap:wrap} }
+  @media(max-width:520px){ .dte-buttons span{display:none}.dte-buttons button{min-width:44px}.dte-legend{display:none}.dte-panel{padding:.75rem}.dte-metrics{grid-template-columns:1fr 1fr}.dte-header h2{font-size:1.35rem}.dte-owner{grid-template-columns:1fr}.dte-owner>span{grid-row:auto;justify-self:start}.dte-owner small{line-height:1.35} }
+  @media(prefers-reduced-motion:reduce){ .dte *{scroll-behavior:auto!important;transition:none!important} }
+</style>

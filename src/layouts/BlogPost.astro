@@ -61,7 +61,7 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
         </div>
       </div>
       {hero_image && (
-        <div class="my-8">
+        <div class="blog-image my-8">
           <img
             src={hero_image}
             alt={title}
@@ -164,13 +164,20 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
       renderTransform();
     };
 
-    const openMedia = (src: string, alt: string, mediaTitle: string, mediaCaption = '') => {
+    const openMedia = (
+      src: string,
+      alt: string,
+      mediaTitle: string,
+      mediaCaption = '',
+      kind: 'image' | 'diagram' = 'image'
+    ) => {
       media.onload = resetView;
       media.src = src;
       media.alt = alt;
       title.textContent = mediaTitle;
       caption.textContent = mediaCaption;
       caption.hidden = !mediaCaption;
+      dialog.classList.toggle('media-lightbox-diagram', kind === 'diagram');
       document.body.classList.add('media-lightbox-open');
       dialog.showModal();
     };
@@ -214,7 +221,7 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
         }
         const serialized = new XMLSerializer().serializeToString(expandedSvg);
         objectUrl = URL.createObjectURL(new Blob([serialized], { type: 'image/svg+xml' }));
-        openMedia(objectUrl, 'Expanded Mermaid diagram', 'Expanded diagram');
+        openMedia(objectUrl, 'Expanded Mermaid diagram', 'Expanded diagram', '', 'diagram');
       };
       diagramElement.addEventListener('click', open);
       diagramElement.addEventListener('keydown', (event) => {
@@ -290,6 +297,7 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
       media.removeAttribute('src');
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = '';
+      dialog.classList.remove('media-lightbox-diagram');
       pointers.clear();
       opener?.focus();
     });

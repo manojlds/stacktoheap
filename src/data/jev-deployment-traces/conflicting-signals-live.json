@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "kind": "jev-deployment-simulation",
+  "capturedAt": "2026-09-20T21:15:07.451Z",
+  "scenario": {
+    "id": "conflicting-signals",
+    "seed": 11
+  },
+  "evaluator": {
+    "kind": "jev",
+    "model": "jev-1.13.0"
+  },
+  "goal": "Safely reach full deployment when evidence supports the canary, avoid unnecessary rollback, and escalate when automation lacks sufficient authority or evidence.",
+  "outcome": {
+    "status": "human-review",
+    "finalState": "humanReview",
+    "transitionCount": 2,
+    "frameCount": 2
+  },
+  "frames": [
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "advanced",
+      "before": {
+        "value": "observing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 0,
+          "maxObservationWindows": 4,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 0,
+          "canaryRequests": 0,
+          "baselineErrorRate": 0,
+          "canaryErrorRate": 0,
+          "baselineP95LatencyMs": 0,
+          "canaryP95LatencyMs": 0,
+          "trend": "stable",
+          "dataQuality": "low",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [],
+          "lastActionError": null
+        },
+        "steps": 0,
+        "history": []
+      },
+      "after": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 1,
+          "maxObservationWindows": 4,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 11774,
+          "canaryRequests": 3017,
+          "baselineErrorRate": 0.02135,
+          "canaryErrorRate": 0.00807,
+          "baselineP95LatencyMs": 192.8,
+          "canaryP95LatencyMs": 609.1,
+          "trend": "conflicting",
+          "dataQuality": "high",
+          "rollbackRisk": "high",
+          "changeFreeze": false,
+          "previousDecisions": [],
+          "lastActionError": null
+        },
+        "steps": 1,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "OBSERVATION_READY",
+      "transition": {
+        "source": "observing",
+        "event": "OBSERVATION_READY",
+        "target": "assessing",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "decision",
+      "status": "advanced",
+      "before": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 1,
+          "maxObservationWindows": 4,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 11774,
+          "canaryRequests": 3017,
+          "baselineErrorRate": 0.02135,
+          "canaryErrorRate": 0.00807,
+          "baselineP95LatencyMs": 192.8,
+          "canaryP95LatencyMs": 609.1,
+          "trend": "conflicting",
+          "dataQuality": "high",
+          "rollbackRisk": "high",
+          "changeFreeze": false,
+          "previousDecisions": [],
+          "lastActionError": null
+        },
+        "steps": 1,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "after": {
+        "value": "humanReview",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 1,
+          "maxObservationWindows": 4,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 11774,
+          "canaryRequests": 3017,
+          "baselineErrorRate": 0.02135,
+          "canaryErrorRate": 0.00807,
+          "baselineP95LatencyMs": 192.8,
+          "canaryP95LatencyMs": 609.1,
+          "trend": "conflicting",
+          "dataQuality": "high",
+          "rollbackRisk": "high",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "ESCALATE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 2,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "ESCALATE",
+            "target": "humanReview",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.53
+          }
+        ]
+      },
+      "enabledChoices": [
+        {
+          "event": "PROMOTE",
+          "target": "shiftingTraffic",
+          "description": "Increase canary traffic because the evidence supports the new version. Do not choose this when evidence is sparse or a change freeze is active."
+        },
+        {
+          "event": "HOLD",
+          "target": "holding",
+          "description": "Keep the current traffic percentage and gather another observation window because the evidence may be noisy or incomplete."
+        },
+        {
+          "event": "ESCALATE",
+          "target": "humanReview",
+          "description": "Pause automation and request human review because evidence conflicts, legal automated actions are exhausted, or the remaining action risk is too high."
+        }
+      ],
+      "selection": {
+        "event": "ESCALATE",
+        "confidence": 0.53,
+        "probabilities": {
+          "PROMOTE": 0,
+          "HOLD": 0.31,
+          "ESCALATE": 0.69
+        },
+        "metadata": {
+          "model": "jev-1.13.0",
+          "usage": {
+            "inputTokens": 740,
+            "outputTokens": 44
+          },
+          "latencyMs": 252.9
+        }
+      },
+      "selectedBy": "jev",
+      "policy": {
+        "minConfidence": 0.5,
+        "minMargin": 0.05,
+        "observedConfidence": 0.53,
+        "observedMargin": 0.37999999999999995,
+        "accepted": true
+      },
+      "transition": {
+        "source": "assessing",
+        "event": "ESCALATE",
+        "target": "humanReview",
+        "control": "decision",
+        "selectedBy": "jev",
+        "confidence": 0.53
+      },
+      "action": {
+        "id": "deployment.notifyHuman",
+        "status": "completed"
+      }
+    }
+  ]
+}

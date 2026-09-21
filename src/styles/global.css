@@ -217,6 +217,13 @@ body.media-lightbox-open {
   cursor: grabbing;
 }
 
+/* Mermaid SVGs inherit the page theme and need an opaque matching canvas.
+   Keep the checkerboard only for ordinary images where transparency is useful. */
+#media-lightbox.media-lightbox-diagram #media-lightbox-viewport {
+  background-color: hsl(var(--background));
+  background-image: none;
+}
+
 #media-lightbox-content {
   max-width: none;
   max-height: none;

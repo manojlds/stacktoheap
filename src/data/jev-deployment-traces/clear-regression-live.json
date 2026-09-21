@@ -1,0 +1,331 @@
+{
+  "schemaVersion": 1,
+  "kind": "jev-deployment-simulation",
+  "capturedAt": "2026-09-20T21:15:07.451Z",
+  "scenario": {
+    "id": "clear-regression",
+    "seed": 42
+  },
+  "evaluator": {
+    "kind": "jev",
+    "model": "jev-1.13.0"
+  },
+  "goal": "Safely reach full deployment when evidence supports the canary, avoid unnecessary rollback, and escalate when automation lacks sufficient authority or evidence.",
+  "outcome": {
+    "status": "rolled-back",
+    "finalState": "rolledBack",
+    "transitionCount": 3,
+    "frameCount": 3
+  },
+  "frames": [
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "advanced",
+      "before": {
+        "value": "observing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 0,
+          "maxObservationWindows": 4,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 0,
+          "canaryRequests": 0,
+          "baselineErrorRate": 0,
+          "canaryErrorRate": 0,
+          "baselineP95LatencyMs": 0,
+          "canaryP95LatencyMs": 0,
+          "trend": "stable",
+          "dataQuality": "low",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [],
+          "lastActionError": null
+        },
+        "steps": 0,
+        "history": []
+      },
+      "after": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 1,
+          "maxObservationWindows": 4,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 10036,
+          "canaryRequests": 2492,
+          "baselineErrorRate": 0.00978,
+          "canaryErrorRate": 0.16119,
+          "baselineP95LatencyMs": 178.5,
+          "canaryP95LatencyMs": 697.4,
+          "trend": "worsening",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [],
+          "lastActionError": null
+        },
+        "steps": 1,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "OBSERVATION_READY",
+      "transition": {
+        "source": "observing",
+        "event": "OBSERVATION_READY",
+        "target": "assessing",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "decision",
+      "status": "advanced",
+      "before": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 1,
+          "maxObservationWindows": 4,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 10036,
+          "canaryRequests": 2492,
+          "baselineErrorRate": 0.00978,
+          "canaryErrorRate": 0.16119,
+          "baselineP95LatencyMs": 178.5,
+          "canaryP95LatencyMs": 697.4,
+          "trend": "worsening",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [],
+          "lastActionError": null
+        },
+        "steps": 1,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "after": {
+        "value": "rollingBack",
+        "context": {
+          "trafficPercent": 0,
+          "observationCount": 1,
+          "maxObservationWindows": 4,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 10036,
+          "canaryRequests": 2492,
+          "baselineErrorRate": 0.00978,
+          "canaryErrorRate": 0.16119,
+          "baselineP95LatencyMs": 178.5,
+          "canaryP95LatencyMs": 697.4,
+          "trend": "worsening",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "ROLLBACK"
+          ],
+          "lastActionError": null
+        },
+        "steps": 2,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "ROLLBACK",
+            "target": "rollingBack",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.93
+          }
+        ]
+      },
+      "enabledChoices": [
+        {
+          "event": "PROMOTE",
+          "target": "shiftingTraffic",
+          "description": "Increase canary traffic because the evidence supports the new version. Do not choose this when evidence is sparse or a change freeze is active."
+        },
+        {
+          "event": "HOLD",
+          "target": "holding",
+          "description": "Keep the current traffic percentage and gather another observation window because the evidence may be noisy or incomplete."
+        },
+        {
+          "event": "ROLLBACK",
+          "target": "rollingBack",
+          "description": "Return traffic to the stable version because the evidence indicates a canary regression. High-risk rollbacks require human review instead."
+        },
+        {
+          "event": "ESCALATE",
+          "target": "humanReview",
+          "description": "Pause automation and request human review because evidence conflicts, legal automated actions are exhausted, or the remaining action risk is too high."
+        }
+      ],
+      "selection": {
+        "event": "ROLLBACK",
+        "confidence": 0.93,
+        "probabilities": {
+          "HOLD": 0.01,
+          "PROMOTE": 0,
+          "ESCALATE": 0.04,
+          "ROLLBACK": 0.95
+        },
+        "metadata": {
+          "model": "jev-1.13.0",
+          "usage": {
+            "inputTokens": 777,
+            "outputTokens": 53
+          },
+          "latencyMs": 281
+        }
+      },
+      "selectedBy": "jev",
+      "policy": {
+        "minConfidence": 0.5,
+        "minMargin": 0.05,
+        "observedConfidence": 0.93,
+        "observedMargin": 0.9099999999999999,
+        "accepted": true
+      },
+      "transition": {
+        "source": "assessing",
+        "event": "ROLLBACK",
+        "target": "rollingBack",
+        "control": "decision",
+        "selectedBy": "jev",
+        "confidence": 0.93
+      },
+      "action": {
+        "id": "deployment.rollback",
+        "status": "completed",
+        "emittedSystemEvent": "ROLLBACK_COMPLETED"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "final",
+      "before": {
+        "value": "rollingBack",
+        "context": {
+          "trafficPercent": 0,
+          "observationCount": 1,
+          "maxObservationWindows": 4,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 10036,
+          "canaryRequests": 2492,
+          "baselineErrorRate": 0.00978,
+          "canaryErrorRate": 0.16119,
+          "baselineP95LatencyMs": 178.5,
+          "canaryP95LatencyMs": 697.4,
+          "trend": "worsening",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "ROLLBACK"
+          ],
+          "lastActionError": null
+        },
+        "steps": 2,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "ROLLBACK",
+            "target": "rollingBack",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.93
+          }
+        ]
+      },
+      "after": {
+        "value": "rolledBack",
+        "context": {
+          "trafficPercent": 0,
+          "observationCount": 1,
+          "maxObservationWindows": 4,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 10036,
+          "canaryRequests": 2492,
+          "baselineErrorRate": 0.00978,
+          "canaryErrorRate": 0.16119,
+          "baselineP95LatencyMs": 178.5,
+          "canaryP95LatencyMs": 697.4,
+          "trend": "worsening",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "ROLLBACK"
+          ],
+          "lastActionError": null
+        },
+        "steps": 3,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "ROLLBACK",
+            "target": "rollingBack",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.93
+          },
+          {
+            "source": "rollingBack",
+            "event": "ROLLBACK_COMPLETED",
+            "target": "rolledBack",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "ROLLBACK_COMPLETED",
+      "transition": {
+        "source": "rollingBack",
+        "event": "ROLLBACK_COMPLETED",
+        "target": "rolledBack",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    }
+  ]
+}
