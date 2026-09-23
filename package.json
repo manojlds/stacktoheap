@@ -19,7 +19,7 @@
   "license": "ISC",
   "packageManager": "pnpm@11.5.1",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.13",
