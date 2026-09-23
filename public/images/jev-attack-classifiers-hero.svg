@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" role="img" aria-labelledby="title desc">
+  <title id="title">Jev: Attack of the Classifiers</title>
+  <desc id="desc">Three small classifier warriors named TF-IDF, MiniLM, and DSPy charge with swords and shields toward Jev, who defends the center.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset=".55" stop-color="#10162a"/>
+      <stop offset="1" stop-color="#1a1025"/>
+    </linearGradient>
+    <radialGradient id="arena" cx="50%" cy="56%" r="53%">
+      <stop offset="0" stop-color="#31d7e8" stop-opacity=".17"/>
+      <stop offset=".45" stop-color="#9c5ed8" stop-opacity=".07"/>
+      <stop offset="1" stop-color="#07111f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="jev" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#39e4ff"/>
+      <stop offset=".52" stop-color="#66efb9"/>
+      <stop offset="1" stop-color="#e967c2"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".5" stop-color="#dcecff"/>
+      <stop offset="1" stop-color="#7893ad"/>
+    </linearGradient>
+    <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse">
+      <path d="M44 0H0V44" fill="none" stroke="#91a6bd" stroke-opacity=".045"/>
+    </pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="760" fill="url(#bg)"/>
+  <rect width="1400" height="760" fill="url(#arena)"/>
+  <rect width="1400" height="760" fill="url(#grid)"/>
+  <g fill="#9bb0c9" opacity=".55">
+    <circle cx="91" cy="154" r="2"/><circle cx="202" cy="117" r="1.5"/><circle cx="426" cy="142" r="1.5"/>
+    <circle cx="969" cy="121" r="1.5"/><circle cx="1183" cy="98" r="2"/><circle cx="1311" cy="180" r="1.5"/>
+    <circle cx="110" cy="624" r="1.5"/><circle cx="1288" cy="615" r="2"/>
+  </g>
+
+  <g font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif">
+    <text x="70" y="70" fill="#f4f7fb" font-size="38" font-weight="850" letter-spacing="-.7">JEV: ATTACK OF THE CLASSIFIERS</text>
+    <text x="72" y="106" fill="#91a8c3" font-size="15" font-weight="700" letter-spacing="2.2">LEXICAL · SEMANTIC · GENERATIVE · TYPED DECISIONS</text>
+
+    <!-- TF-IDF warrior -->
+    <g transform="translate(118 173)">
+      <!-- legs and body -->
+      <path d="M123 169l-25 43M169 169l27 43" stroke="#8a4b83" stroke-width="15" stroke-linecap="round"/>
+      <path d="M82 89c0-48 30-78 67-78s67 30 67 78v68c-18 18-42 27-67 27s-49-9-67-27Z" fill="#291a35" stroke="#ff64c9" stroke-width="4"/>
+      <!-- helmet -->
+      <path d="M83 79c4-44 31-68 66-68s62 24 66 68Z" fill="#492344" stroke="#ff64c9" stroke-width="4"/>
+      <path d="M91 78h116" stroke="#ff98dd" stroke-width="6" stroke-linecap="round"/>
+      <!-- face -->
+      <rect x="105" y="73" width="88" height="47" rx="23" fill="#111b2b" stroke="#bd5baa" stroke-width="3"/>
+      <circle cx="133" cy="96" r="8" fill="#f5fbff"/><circle cx="165" cy="96" r="8" fill="#f5fbff"/>
+      <circle cx="136" cy="97" r="3.5" fill="#ff64c9"/><circle cx="168" cy="97" r="3.5" fill="#ff64c9"/>
+      <path d="M137 130q12 10 25 0" fill="none" stroke="#d9b3d1" stroke-width="3" stroke-linecap="round"/>
+      <!-- shield arm -->
+      <path d="M93 125L54 139" stroke="#8a4b83" stroke-width="16" stroke-linecap="round"/>
+      <!-- named shield -->
+      <path d="M9 98L62 81l53 17v45c0 42-23 71-53 86-30-15-53-44-53-86Z" fill="#181729" stroke="#ff64c9" stroke-width="4"/>
+      <path d="M19 106l43-14 43 14v35c0 32-17 56-43 70-26-14-43-38-43-70Z" fill="#2b1933" stroke="#8f407f" stroke-width="2"/>
+      <text x="62" y="143" fill="#ff83d4" font-size="17" font-weight="850" text-anchor="middle">TF-IDF</text>
+      <text x="62" y="161" fill="#b990b5" font-size="9" font-weight="700" text-anchor="middle" letter-spacing="1.2">LEXICAL</text>
+      <!-- sword arm -->
+      <path d="M205 126l52 35" stroke="#8a4b83" stroke-width="16" stroke-linecap="round"/>
+      <!-- sword aimed at Jev -->
+      <g transform="rotate(31 254 157)" filter="url(#softGlow)">
+        <path d="M246 148h43v18h-43" fill="#3b2440" stroke="#ff64c9" stroke-width="4"/>
+        <rect x="278" y="150" width="19" height="14" rx="6" fill="#ff64c9"/>
+        <path d="M292 147h183l31 12-31 12H292Z" fill="url(#steel)" stroke="#ff64c9" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M312 158h166" stroke="#ffb0e5" stroke-width="2"/>
+      </g>
+    </g>
+
+    <!-- MiniLM warrior -->
+    <g transform="translate(152 447)">
+      <path d="M122 163l-27 42M170 163l28 42" stroke="#247b99" stroke-width="15" stroke-linecap="round"/>
+      <path d="M81 84c0-46 30-75 67-75s67 29 67 75v68c-18 18-42 27-67 27s-49-9-67-27Z" fill="#10283a" stroke="#39dcff" stroke-width="4"/>
+      <path d="M83 75c5-42 31-66 65-66s60 24 65 66Z" fill="#123a4e" stroke="#39dcff" stroke-width="4"/>
+      <path d="M91 75h114" stroke="#7bedff" stroke-width="6" stroke-linecap="round"/>
+      <rect x="104" y="70" width="88" height="47" rx="23" fill="#101b2b" stroke="#2c9fbd" stroke-width="3"/>
+      <circle cx="132" cy="93" r="8" fill="#f5fbff"/><circle cx="164" cy="93" r="8" fill="#f5fbff"/>
+      <circle cx="135" cy="94" r="3.5" fill="#39dcff"/><circle cx="167" cy="94" r="3.5" fill="#39dcff"/>
+      <path d="M136 127q12 10 25 0" fill="none" stroke="#a7d9e3" stroke-width="3" stroke-linecap="round"/>
+      <path d="M94 120L55 133" stroke="#247b99" stroke-width="16" stroke-linecap="round"/>
+      <path d="M8 92l54-17 54 17v45c0 42-24 72-54 87-30-15-54-45-54-87Z" fill="#111c2d" stroke="#39dcff" stroke-width="4"/>
+      <path d="M19 101l43-14 43 14v34c0 33-18 57-43 71-25-14-43-38-43-71Z" fill="#102b3b" stroke="#247f9b" stroke-width="2"/>
+      <text x="62" y="139" fill="#59e5ff" font-size="17" font-weight="850" text-anchor="middle">MiniLM</text>
+      <text x="62" y="157" fill="#84b8c7" font-size="9" font-weight="700" text-anchor="middle" letter-spacing="1.2">SEMANTIC</text>
+      <path d="M204 121l51-34" stroke="#247b99" stroke-width="16" stroke-linecap="round"/>
+      <g transform="rotate(-31 254 91)" filter="url(#softGlow)">
+        <path d="M245 81h44v19h-44" fill="#123749" stroke="#39dcff" stroke-width="4"/>
+        <rect x="278" y="84" width="19" height="14" rx="6" fill="#39dcff"/>
+        <path d="M292 81h183l31 11-31 13H292Z" fill="url(#steel)" stroke="#39dcff" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M312 93h166" stroke="#a7f4ff" stroke-width="2"/>
+      </g>
+    </g>
+
+    <!-- DSPy warrior -->
+    <g transform="translate(1050 260)">
+      <path d="M115 168l-27 44M163 168l28 44" stroke="#95662e" stroke-width="15" stroke-linecap="round"/>
+      <path d="M76 87c0-47 29-76 64-76s64 29 64 76v68c-17 18-40 27-64 27s-47-9-64-27Z" fill="#342719" stroke="#ffb54e" stroke-width="4"/>
+      <path d="M78 77c5-42 30-66 62-66s57 24 62 66Z" fill="#50361d" stroke="#ffb54e" stroke-width="4"/>
+      <path d="M86 77h108" stroke="#ffd486" stroke-width="6" stroke-linecap="round"/>
+      <rect x="98" y="72" width="84" height="46" rx="23" fill="#141b29" stroke="#b77c36" stroke-width="3"/>
+      <circle cx="125" cy="95" r="8" fill="#fffaf1"/><circle cx="155" cy="95" r="8" fill="#fffaf1"/>
+      <circle cx="122" cy="96" r="3.5" fill="#ffb54e"/><circle cx="152" cy="96" r="3.5" fill="#ffb54e"/>
+      <path d="M128 131q12 9 24 0" fill="none" stroke="#e5c69b" stroke-width="3" stroke-linecap="round"/>
+      <!-- shield on outside -->
+      <path d="M193 120l40 14" stroke="#95662e" stroke-width="16" stroke-linecap="round"/>
+      <path d="M184 96l53-17 53 17v45c0 42-23 71-53 86-30-15-53-44-53-86Z" fill="#1b1b29" stroke="#ffb54e" stroke-width="4"/>
+      <path d="M194 104l43-14 43 14v35c0 32-17 56-43 70-26-14-43-38-43-70Z" fill="#33291e" stroke="#a36d31" stroke-width="2"/>
+      <text x="237" y="143" fill="#ffc66f" font-size="19" font-weight="850" text-anchor="middle">DSPy</text>
+      <text x="237" y="161" fill="#c0a57d" font-size="9" font-weight="700" text-anchor="middle" letter-spacing="1.2">GENERATIVE</text>
+      <!-- inward sword -->
+      <path d="M79 122l-48 4" stroke="#95662e" stroke-width="16" stroke-linecap="round"/>
+      <g transform="translate(29 126) rotate(180)" filter="url(#softGlow)">
+        <path d="M-8-10h44V9H-8" fill="#46311d" stroke="#ffb54e" stroke-width="4"/>
+        <rect x="26" y="-7" width="19" height="14" rx="6" fill="#ffb54e"/>
+        <path d="M40-10h184l31 12-31 12H40Z" fill="url(#steel)" stroke="#ffb54e" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M61 2h166" stroke="#ffe0a8" stroke-width="2"/>
+      </g>
+    </g>
+
+    <!-- Jev defender at the center -->
+    <g transform="translate(566 190)">
+      <circle cx="142" cy="190" r="181" fill="#0e1a2c" stroke="#253d58" stroke-width="2" opacity=".92"/>
+      <circle cx="142" cy="190" r="156" fill="none" stroke="url(#jev)" stroke-width="7" filter="url(#glow)"/>
+      <!-- helmeted head behind shield -->
+      <circle cx="142" cy="105" r="62" fill="#132739" stroke="#5be8c3" stroke-width="4"/>
+      <path d="M86 104c3-45 25-70 56-70s53 25 56 70Z" fill="#173b45" stroke="url(#jev)" stroke-width="4"/>
+      <path d="M87 103h110" stroke="#72f0c0" stroke-width="7" stroke-linecap="round"/>
+      <rect x="103" y="95" width="78" height="42" rx="21" fill="#0c1727" stroke="#3da999" stroke-width="3"/>
+      <circle cx="128" cy="116" r="7" fill="#f4fffb"/><circle cx="156" cy="116" r="7" fill="#f4fffb"/>
+      <circle cx="128" cy="116" r="3" fill="#61efb7"/><circle cx="156" cy="116" r="3" fill="#61efb7"/>
+      <!-- central shield -->
+      <path d="M142 126l105 38v82c0 83-46 138-105 165-59-27-105-82-105-165v-82Z" fill="#10273a" stroke="url(#jev)" stroke-width="7" filter="url(#softGlow)"/>
+      <path d="M142 146l84 31v66c0 65-34 111-84 138-50-27-84-73-84-138v-66Z" fill="#111b2d" stroke="#3e8f93" stroke-width="2"/>
+      <text x="142" y="253" fill="#f4f7fb" font-size="62" font-weight="900" text-anchor="middle" letter-spacing="2">JEV</text>
+      <text x="142" y="284" fill="#69efb9" font-size="13" font-weight="850" text-anchor="middle" letter-spacing="3">TYPED DECISIONS</text>
+      <path d="M98 308h88" stroke="#3d8e82" stroke-width="2"/>
+      <text x="142" y="338" fill="#a2b8c8" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.4">HOLDS THE LINE</text>
+    </g>
+
+    <!-- impacts on Jev's shield -->
+    <g fill="none" stroke-linecap="round" filter="url(#softGlow)">
+      <g stroke="#ff69ca" stroke-width="4">
+        <circle cx="595" cy="331" r="7" fill="#fff"/>
+        <path d="M587 324l-25-16M590 316l-4-26M582 334l-28 3"/>
+      </g>
+      <g stroke="#42dfff" stroke-width="4">
+        <circle cx="593" cy="459" r="7" fill="#fff"/>
+        <path d="M585 466l-25 17M588 475l-3 26M579 456l-28-1"/>
+      </g>
+      <g stroke="#ffbc55" stroke-width="4">
+        <circle cx="823" cy="385" r="7" fill="#fff"/>
+        <path d="M831 378l24-18M836 387l28 2M827 370l5-27"/>
+      </g>
+    </g>
+
+    <line x1="70" y1="704" x2="1330" y2="704" stroke="#29415b" stroke-width="2"/>
+    <text x="70" y="736" fill="#8ba2bd" font-size="12" font-weight="700" letter-spacing="1.5">THREE CLASSIFIERS CHARGE</text>
+    <text x="1330" y="736" fill="#62eebb" font-size="12" font-weight="800" text-anchor="end" letter-spacing="1.5">ONE BOUNDED DECISION MAKER DEFENDS</text>
+  </g>
+</svg>
