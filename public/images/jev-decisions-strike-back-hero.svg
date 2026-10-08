@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" role="img" aria-labelledby="title desc">
+  <title id="title">Jev: The Decisions Strike Back</title>
+  <desc id="desc">Friendly helmeted Jev and Luna warriors face each other in a starry arena. Jev carries a green typed-decision shield and Luna a blue OpenAI Decisions shield. Their glowing swords point at a shared 77-intent target beneath a crescent moon. Probability bars and a reminder to measure accuracy, calibration, latency, and cost complete the scene.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07111f"/><stop offset=".55" stop-color="#10162a"/><stop offset="1" stop-color="#1a1025"/></linearGradient>
+    <radialGradient id="arena" cx="50%" cy="52%" r="55%"><stop stop-color="#31d7e8" stop-opacity=".17"/><stop offset=".6" stop-color="#9c5ed8" stop-opacity=".09"/><stop offset="1" stop-color="#07111f" stop-opacity="0"/></radialGradient>
+    <linearGradient id="jev" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#39e4ff"/><stop offset=".5" stop-color="#66efb9"/><stop offset="1" stop-color="#e967c2"/></linearGradient>
+    <linearGradient id="luna" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#dcecff"/><stop offset=".45" stop-color="#61c9ff"/><stop offset="1" stop-color="#a990ff"/></linearGradient>
+    <linearGradient id="steel"><stop stop-color="#fff"/><stop offset=".6" stop-color="#dcecff"/><stop offset="1" stop-color="#7893ad"/></linearGradient>
+    <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse"><path d="M44 0H0V44" fill="none" stroke="#91a6bd" stroke-opacity=".045"/></pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1400" height="760" fill="url(#bg)"/>
+  <rect width="1400" height="760" fill="url(#arena)"/>
+  <rect width="1400" height="760" fill="url(#grid)"/>
+  <g fill="#9bb0c9" opacity=".6"><circle cx="91" cy="154" r="2"/><circle cx="202" cy="127" r="1.5"/><circle cx="459" cy="161" r="2"/><circle cx="939" cy="143" r="1.5"/><circle cx="1183" cy="108" r="2"/><circle cx="1311" cy="190" r="1.5"/><circle cx="110" cy="624" r="1.5"/><circle cx="1288" cy="615" r="2"/><circle cx="764" cy="160" r="2"/></g>
+  <g font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif">
+    <text x="70" y="70" fill="#f4f7fb" font-size="40" font-weight="850" letter-spacing="-.7">JEV: THE DECISIONS STRIKE BACK</text>
+    <text x="72" y="106" fill="#91a8c3" font-size="15" font-weight="700" letter-spacing="2.2">A NEW MOON · SAME 77 INTENTS · NO MONOLOGUES</text>
+
+    <!-- A crescent above the shared decision arena. -->
+    <circle cx="700" cy="208" r="48" fill="url(#luna)" opacity=".95" filter="url(#softGlow)"/>
+    <circle cx="720" cy="193" r="45" fill="#11182b"/>
+    <path d="M772 205v16M764 213h16" stroke="#c6ddff" stroke-width="2" opacity=".8"/>
+    <ellipse cx="700" cy="494" rx="579" ry="168" fill="#112037" opacity=".33"/>
+    <path d="M150 555Q700 698 1250 555" fill="none" stroke="#254058" stroke-width="2"/>
+
+    <!-- Jev: the familiar defender, now facing another bounded decision maker. -->
+    <g transform="translate(167 204)">
+      <circle cx="142" cy="185" r="171" fill="#0e1a2c" stroke="#253d58" stroke-width="2"/>
+      <circle cx="142" cy="185" r="151" fill="none" stroke="url(#jev)" stroke-width="6" filter="url(#glow)"/>
+      <path d="M101 273l-26 64M183 273l29 64" stroke="#347e83" stroke-width="16" stroke-linecap="round"/>
+      <path d="M80 113c0-44 26-74 62-74s62 30 62 74v81c-18 23-40 32-62 32s-44-9-62-32Z" fill="#15313e" stroke="#5be8c3" stroke-width="4"/>
+      <path d="M86 103c3-45 25-70 56-70s53 25 56 70Z" fill="#173b45" stroke="url(#jev)" stroke-width="4"/>
+      <path d="M87 103h110" stroke="#72f0c0" stroke-width="7" stroke-linecap="round"/>
+      <rect x="103" y="95" width="78" height="42" rx="21" fill="#0c1727" stroke="#3da999" stroke-width="3"/>
+      <circle cx="128" cy="116" r="7" fill="#f4fffb"/><circle cx="156" cy="116" r="7" fill="#f4fffb"/>
+      <circle cx="130" cy="117" r="3" fill="#61efb7"/><circle cx="158" cy="117" r="3" fill="#61efb7"/>
+      <path d="M131 146q11 8 22 0" fill="none" stroke="#a7e1ce" stroke-width="3" stroke-linecap="round"/>
+      <path d="M197 163l76-18" stroke="#347e83" stroke-width="16" stroke-linecap="round"/>
+      <g transform="translate(262 145) rotate(-6)" filter="url(#softGlow)">
+        <path d="M-5-9h39v18H-5" fill="#153b3d" stroke="#66efb9" stroke-width="3"/>
+        <path d="M31-17v34" stroke="#66efb9" stroke-width="7" stroke-linecap="round"/>
+        <path d="M39-10h157l27 10-27 10H39Z" fill="url(#steel)" stroke="#66efb9" stroke-width="4"/>
+        <path d="M57 0h138" stroke="#acffde" stroke-width="2"/>
+      </g>
+      <path d="M142 153l105 38v72c0 74-46 124-105 151-59-27-105-77-105-151v-72Z" fill="#10273a" stroke="url(#jev)" stroke-width="7" filter="url(#softGlow)"/>
+      <path d="M142 173l84 31v55c0 57-34 99-84 126-50-27-84-69-84-126v-55Z" fill="#111b2d" stroke="#3e8f93" stroke-width="2"/>
+      <text x="142" y="271" fill="#f4f7fb" font-size="57" font-weight="900" text-anchor="middle" letter-spacing="2">JEV</text>
+      <text x="142" y="299" fill="#69efb9" font-size="11" font-weight="850" text-anchor="middle" letter-spacing="2.6">TYPED DECISIONS</text>
+      <path d="M98 320h88" stroke="#3d8e82" stroke-width="2"/>
+      <text x="142" y="348" fill="#a2b8c8" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.2">HOLDS THE LINE</text>
+    </g>
+
+    <!-- Luna: a new helmet, a crescent badge, the same bounded contest. -->
+    <g transform="translate(948 204)">
+      <circle cx="142" cy="185" r="171" fill="#10192e" stroke="#2b385b" stroke-width="2"/>
+      <circle cx="142" cy="185" r="151" fill="none" stroke="url(#luna)" stroke-width="6" filter="url(#glow)"/>
+      <path d="M101 273l-26 64M183 273l29 64" stroke="#476b9c" stroke-width="16" stroke-linecap="round"/>
+      <path d="M80 113c0-44 26-74 62-74s62 30 62 74v81c-18 23-40 32-62 32s-44-9-62-32Z" fill="#172c4c" stroke="#79cfff" stroke-width="4"/>
+      <path d="M86 103c3-45 25-70 56-70s53 25 56 70Z" fill="#1b3856" stroke="url(#luna)" stroke-width="4"/>
+      <path d="M87 103h110" stroke="#b2e5ff" stroke-width="7" stroke-linecap="round"/>
+      <path d="M146 48a18 18 0 1 0 12 29 15 15 0 0 1-12-29Z" fill="#d6e9ff"/>
+      <rect x="103" y="95" width="78" height="42" rx="21" fill="#0c1727" stroke="#537bba" stroke-width="3"/>
+      <circle cx="128" cy="116" r="7" fill="#f4faff"/><circle cx="156" cy="116" r="7" fill="#f4faff"/>
+      <circle cx="126" cy="117" r="3" fill="#83cfff"/><circle cx="154" cy="117" r="3" fill="#83cfff"/>
+      <path d="M131 146q11 8 22 0" fill="none" stroke="#bbd6fa" stroke-width="3" stroke-linecap="round"/>
+      <path d="M84 163L8 145" stroke="#476b9c" stroke-width="16" stroke-linecap="round"/>
+      <g transform="translate(20 145) rotate(186)" filter="url(#softGlow)">
+        <path d="M-5-9h39v18H-5" fill="#213454" stroke="#79cfff" stroke-width="3"/>
+        <path d="M31-17v34" stroke="#79cfff" stroke-width="7" stroke-linecap="round"/>
+        <path d="M39-10h157l27 10-27 10H39Z" fill="url(#steel)" stroke="#79cfff" stroke-width="4"/>
+        <path d="M57 0h138" stroke="#d6e9ff" stroke-width="2"/>
+      </g>
+      <path d="M142 153l105 38v72c0 74-46 124-105 151-59-27-105-77-105-151v-72Z" fill="#1a2c47" stroke="url(#luna)" stroke-width="7" filter="url(#softGlow)"/>
+      <path d="M142 173l84 31v55c0 57-34 99-84 126-50-27-84-69-84-126v-55Z" fill="#111b2d" stroke="#5579b6" stroke-width="2"/>
+      <text x="142" y="271" fill="#f4f7fb" font-size="46" font-weight="900" text-anchor="middle" letter-spacing="2">LUNA</text>
+      <text x="142" y="299" fill="#98d8ff" font-size="11" font-weight="850" text-anchor="middle" letter-spacing="2.1">OPENAI DECISIONS</text>
+      <path d="M98 320h88" stroke="#5579b6" stroke-width="2"/>
+      <text x="142" y="348" fill="#a2b8c8" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="1.2">JOINS THE ARENA</text>
+    </g>
+
+    <!-- Neither sword wins the artwork. The dataset is the referee. -->
+    <circle cx="700" cy="339" r="80" fill="#0d1729" stroke="#425975" stroke-width="2"/>
+    <circle cx="700" cy="339" r="69" fill="none" stroke="#d0dcff" stroke-width="2" stroke-dasharray="3 8" opacity=".65"/>
+    <text x="700" y="350" fill="#f4f7fb" font-size="49" font-weight="900" text-anchor="middle">77</text>
+    <text x="700" y="377" fill="#9bb0c9" font-size="12" font-weight="800" text-anchor="middle" letter-spacing="2.2">INTENTS</text>
+    <g stroke-linecap="round" filter="url(#softGlow)"><circle cx="625" cy="327" r="5" fill="#fff" stroke="#66efb9" stroke-width="3"/><path d="M612 322l-9-8M611 333l-11 4" stroke="#66efb9" stroke-width="3"/><circle cx="775" cy="327" r="5" fill="#fff" stroke="#79cfff" stroke-width="3"/><path d="M788 322l9-8M789 333l11 4" stroke="#79cfff" stroke-width="3"/></g>
+    <text x="700" y="450" fill="#91a8c3" font-size="14" font-weight="700" text-anchor="middle" letter-spacing="1.7">NATIVE PROBABILITIES</text>
+    <g transform="translate(573 471)">
+      <rect width="254" height="113" rx="16" fill="#0c1727" stroke="#2a405b"/>
+      <path d="M25 88H229" stroke="#425975" stroke-width="2"/>
+      <rect x="38" y="25" width="31" height="63" rx="3" fill="#66efb9"/><rect x="86" y="40" width="31" height="48" rx="3" fill="#79cfff"/><rect x="134" y="64" width="31" height="24" rx="3" fill="#c396f5"/><rect x="182" y="74" width="31" height="14" rx="3" fill="#ffb54e"/>
+    </g>
+    <text x="700" y="631" fill="#c8d4e5" font-size="16" font-weight="700" text-anchor="middle">Accuracy. Calibration. Latency. Cost.</text>
+    <text x="700" y="658" fill="#91a8c3" font-size="13" text-anchor="middle">BANKING77 brings the receipts.</text>
+    <line x1="70" y1="704" x2="1330" y2="704" stroke="#29415b" stroke-width="2"/>
+    <text x="70" y="736" fill="#8ba2bd" font-size="12" font-weight="700" letter-spacing="1.5">TWO BOUNDED DECISION MAKERS</text>
+    <text x="1330" y="736" fill="#98d8ff" font-size="12" font-weight="800" text-anchor="end" letter-spacing="1.5">ONE VERY PARTICULAR BANKING DATASET</text>
+  </g>
+</svg>
