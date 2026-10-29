@@ -1,0 +1,323 @@
+---
+title: "Jev: Attack of the Classifiers"
+excerpt: "TF-IDF, MiniLM, and DSPy draw their swords. Jev raises a shield. BANKING77 keeps score."
+date: 2026-09-22
+reading_time: 12 mins
+categories: [ai, machine-learning]
+tags: [jev, typesafe, classification, tf-idf, minilm, dspy, banking77]
+hero_image: /images/jev-attack-classifiers-hero.png
+comments: true
+draft: false
+series:
+  name: "Jev as a bounded decision maker"
+  part: 3
+---
+
+In the [first Jev article](/blog/2026/09/18/jev-doesnt-write-review-comments), I used Jev as a typed decision function. In the [second](/blog/2026/09/21/the-state-machine-is-the-agent), I put that function at the branches of a state machine.
+
+Both experiments carefully avoided a more basic question:
+
+> What happens if I make Jev do ordinary classification and compare it with ordinary classifiers?
+
+So I built the comparison I had been skirting around. I gave the same banking-support problem to a lexical model from the old school, a small sentence transformer, a general-purpose language model through DSPy, an optimized version of that DSPy program, and Jev.
+
+The title says “attack,” but no classifiers were harmed. Several API credits were mildly inconvenienced.
+
+# The problem: choosing labels
+
+Classification maps an input to one or more categories from a known set. The shape of that output matters because “classification” covers several different problems.
+
+| Type | Output | Example |
+| --- | --- | --- |
+| **Binary** | One of two outcomes | Is this email spam? |
+| **Multiclass** | Exactly one of several labels | Which team should receive this ticket? |
+| **Multilabel** | Any number of independently applicable labels | Does this message contain abuse, spam, or personal data? |
+| **Ordinal** | One ordered level | Is this incident low, medium, or high severity? |
+
+Binary classification is the simplest case. A spam filter chooses `spam` or `not_spam`. Multiclass classification expands the menu but still picks exactly one answer. A moderation system might choose `safe`, `review`, or `block`; a support router might choose billing, shipping, or technical support.
+
+Multilabel classification is different. A message can be both abusive and contain personal data. The labels do not compete for a single winning slot, so forcing them into one multiclass answer would throw information away.
+
+Ordinal classification adds order. `high` is more severe than `medium`, which is more severe than `low`. The distance between levels may matter even though the labels remain discrete.
+
+## How those shapes map to Jev
+
+Jev exposes three typed question primitives. They line up with these common classification shapes, but the primitive should follow the meaning of the answer rather than the name of an ML technique.
+
+| Classification need | Jev primitive | Returned answer |
+| --- | --- | --- |
+| Binary proposition | **Noul** | Probability of yes from 0 to 1 |
+| Single-label multiclass | **Choice** | Selected option, full probability distribution, and confidence |
+| Multilabel | **One Noul per label** | Independent yes probability for every label |
+| Ordered levels | **Score** | Probability-weighted score, level distribution, and confidence |
+
+A **Noul** asks whether one proposition holds: “Does this message contain payment-card data?” It returns `P(yes)`. There is no separate Noul confidence value; a result near 0.5 already expresses that yes and no are similarly plausible.
+
+A **Choice** asks which option best fits. Its probabilities compete and sum to one. That makes it appropriate for single-label routing, but usually wrong for multilabel classification: raising the probability of one Choice option necessarily takes probability away from the others. For multilabel work, separate Nouls let every condition be true or false independently.
+
+A **Score** uses an ordered rubric. It returns a probability distribution over the levels and a weighted position across them. It is useful for severity, quality, urgency, or any classification where the order carries meaning. It is not an invitation to ask the model for an unexplained number; each level still needs a concrete description.
+
+Choice and Score also return confidence derived from how concentrated their distributions are. That describes how clearly one answer separates from its alternatives. It does not prove the answer is correct.
+
+# The dataset: 77 ways banking can go wrong
+
+[BANKING77](https://huggingface.co/datasets/PolyAI/banking77) contains 13,083 online-banking queries across those 77 intents. It is a public dataset licensed under CC BY 4.0.
+
+Every query belongs to exactly one intent, making this a **single-label multiclass** problem. For Jev, that maps naturally to one Choice containing all 77 options.
+
+The function is conceptually simple:
+
+```text
+classify("Why has my cash withdrawal not arrived?")
+  -> pending_cash_withdrawal
+```
+
+The output space is bounded. The hard part is deciding which evidence in the text separates labels that may be very close to each other.
+
+Consider these three intents:
+
+- `card_payment_fee_charged`
+- `cash_withdrawal_charge`
+- `transfer_fee_charged`
+
+The word “charged” is not enough. The classifier has to identify which operation the customer is talking about. Other boundaries are subtler: a transfer can be pending, declined, cancelled, or not received by its recipient.
+
+This is exactly the kind of bounded decision I have been using Jev for. It is also a problem with decades of non-LLM solutions. That makes it a useful place to compare abstractions rather than demos.
+
+The official training split has 10,003 examples. I reserved 20 deterministic examples from every class for development, producing:
+
+| Split | Examples | Purpose |
+| --- | ---: | --- |
+| Train | 8,463 | Fit the local classifiers |
+| Development | 1,540 | Select the local linear head and optimize DSPy |
+| Official test | 3,080 | Final evaluation only |
+
+The local models were cheap enough to run over all 3,080 test examples. Live services were not, so I selected a deterministic, stratified sample of ten test examples from every class: 770 examples total.
+
+For the main comparison, I also evaluated the local models on those exact 770 examples. That matters. Comparing one system on an easy random slice and another on the full test set would produce a neat table and a bad experiment.
+
+This still is not a perfectly controlled model comparison:
+
+- TF-IDF and MiniLM see all 8,463 training examples.
+- Base DSPy and Jev are zero-shot; they see label definitions but no training examples.
+- Optimized DSPy uses one training and one development example per class.
+- Local latency excludes training and model loading; service latency includes the network.
+
+The benchmark compares useful ways to build the feature, not models given identical supervision and infrastructure.
+
+# Contestant one: TF-IDF, the bag of words with receipts
+
+TF-IDF is the baseline people are often too eager to skip.
+
+It represents a document using the words and phrases it contains. **Term frequency** rewards terms that appear in this document. **Inverse document frequency** reduces the weight of terms that appear in almost every document. A rare phrase such as “cash withdrawal” carries more information than “please.”
+
+My implementation uses word unigrams and bigrams, keeps the 4,096 most frequent features, applies sublinear term frequency and IDF weighting, and normalizes the resulting sparse vector. A linear softmax classifier then learns one set of weights for each of the 77 intents.
+
+```text
+message
+  -> word and bigram counts
+  -> TF-IDF sparse vector
+  -> linear softmax head
+  -> one of 77 intents
+```
+
+This model has no semantic understanding in the transformer sense. It does not know that “cash machine” and “ATM” are related unless the training data gives the linear head enough lexical evidence. But support datasets contain repeated domain language, and linear classifiers are very good at exploiting it.
+
+On the 770-example comparison set, TF-IDF reached **82.73% accuracy** and **81.68% macro-F1**. Mean inference time was **0.044 ms per example** on my machine.
+
+That is the first useful result: the supposedly boring baseline is not a ceremonial participant. It is fast, local, inspectable, and difficult to beat casually.
+
+# Contestant two: MiniLM learns what the sentence means
+
+TF-IDF starts from lexical overlap. MiniLM starts from a learned sentence representation.
+
+I used `all-MiniLM-L6-v2`, a compact six-layer sentence transformer that maps each query to a 384-dimensional embedding. Queries with similar meanings can land near each other even when they do not share the same words.
+
+Why MiniLM rather than a larger embedding model?
+
+I wanted a realistic local classifier, not a second hosted-model benchmark. MiniLM is small enough to run quantized on CPU, widely used, and strong enough to test whether semantic features improve the same simple classifier. I froze the encoder and trained the **same kind of linear softmax head** used by TF-IDF. The comparison therefore changes the representation while keeping the final classifier deliberately plain.
+
+```text
+message
+  -> frozen MiniLM encoder
+  -> 384-dimensional dense vector
+  -> linear softmax head
+  -> one of 77 intents
+```
+
+MiniLM won the benchmark: **89.87% accuracy** and **89.84% macro-F1** on the shared 770 examples, at **1.28 ms per example**.
+
+That seven-point gain over TF-IDF is the value of semantic representation here. “Where is the nearest cash machine?” can resemble other ATM questions even if the exact phrasing was absent from training.
+
+It is slower than TF-IDF by a large ratio and still extremely fast in absolute terms. It also remains fully local after downloading the model.
+
+# Contestant three: DSPy turns an LLM call into a program
+
+The third approach uses [DSPy](https://dspy.ai/) with GLM-5.3 Flash through OpenCode Go.
+
+DSPy is not itself a classifier model. It provides a way to define structured language-model programs and optimize them. I defined a signature with three inputs:
+
+- the customer message;
+- the classification instruction;
+- a typed dictionary containing all 77 intent names and definitions.
+
+The output is a `Literal` over the exact 77 labels, so the allowed values are part of the DSPy signature rather than a convention hidden in prompt text.
+
+In abbreviated form, the signature looks like this:
+
+```python
+class IntentClassificationSignature(dspy.Signature):
+    message: str = dspy.InputField()
+    task_instructions: str = dspy.InputField()
+    intent_options: dict[str, str] = dspy.InputField()
+    intent: Literal["card_arrival", ..., "country_support"] = dspy.OutputField()
+```
+
+The base DSPy program was zero-shot. For every test query, GLM received the instructions and all 77 definitions and returned one typed label.
+
+It scored **82.86% accuracy** and **82.01% macro-F1**. The 770 sequential requests took **23 minutes 44 seconds**, or **1.85 seconds each** on average.
+
+I later ran the same uncompiled typed program with MiMo-V2.6-Flash over the complete test set. On the shared 770-example sample it scored **80.39% accuracy** and **79.32% macro-F1**. Across all 3,080 examples it reached **80.91%** and **80.11%**, averaging **4.08 seconds per request**. It produced no contract failures. A framework name is not a result: the model behind the DSPy program still matters.
+
+# Optimizing the DSPy program
+
+I also ran MIPROv2 with exact intent match. Its light optimization loop received:
+
+- one deterministic training example per class: 77 total;
+- one separate development example per class: 77 total;
+- no test examples;
+- GLM-5.3 Flash as both the prompt and task model.
+
+MIPROv2 proposed instructions and demonstrations, evaluated candidates on the development set, and saved the best program.
+
+On the test set, that program scored **82.73% accuracy** and **81.87% macro-F1**—slightly below the zero-shot signature. Optimization is an experiment, not an automatic upgrade. This small development set did not produce a prompt that generalized better.
+
+# Contestant four: Jev makes the label space the interface
+
+Jev received the same customer message and the same 77 intent definitions as a typed `Choice` question:
+
+```text
+state:     "customer message"
+question:  Which BANKING77 intent best describes the request?
+criteria:  77 allowed intent keys and their definitions
+result:    selected key + probability distribution
+```
+
+There was no model training, prompt optimization, or demonstration selection. A 77-way Choice is within the documented 255-option limit, and the TypeSafe guidance recommends supplying the full option set rather than creating an arbitrary shortlist. Because BANKING77 guarantees that every test query has one of these labels, I did not add a `none_of_the_above` option.
+
+Jev returned an allowed choice, its probability distribution, and confidence. Confidence describes how concentrated that distribution is; it is not a correctness guarantee. I pinned `jev-1.13.0` rather than using the moving `jev-latest` alias.
+
+On the 770 examples, Jev reached **81.17% accuracy** and **80.37% macro-F1**. The sequential run took **3 minutes 50 seconds**, or **298 ms per example**.
+
+That result raised an obvious question: was Jev missing language understanding, or was it missing the dataset's particular boundaries? TypeSafe's guidance recommends structured Choice criteria for easily confused options, with fields such as `what`, `not_for`, and `examples`. I ran a second arm that changed each option from a short definition to this shape:
+
+```json
+{
+  "what": "The customer is asking about cash withdrawal charge.",
+  "examples": [
+    "I saw I was charged extra for money I withdrew?",
+    "I hate this ATM, it charged me an extra fee, Why did it charge?"
+  ]
+}
+```
+
+The examples were selected deterministically from the training split: two per intent, 154 in total. No development or test examples were used, and I did not hand-tune exclusions from test-set errors.
+
+With those examples, Jev reached **85.32% accuracy** and **84.99% macro-F1**. Mean latency rose to **520 ms**, and input usage rose from 1.64 million to 4.36 million tokens. The examples supplied useful domain supervision, but they also made every request larger.
+
+This four-point gain suggests that much of the zero-shot gap came from BANKING77's annotation boundaries. General language understanding was not enough to recover all of the dataset's conventions from terse label definitions.
+
+TypeSafe can evaluate many questions over one shared state in parallel. That does not provide a bulk endpoint for 770 unrelated customer messages: combining them would change the state visible to each question. I therefore kept one message per request.
+
+The definition-only Jev arm finished behind TF-IDF and base DSPy but was about six times faster than DSPy. The example-guided arm moved ahead of both while remaining below MiniLM. These are end-to-end measurements of different hosted services, not intrinsic hardware benchmarks.
+
+# The scoreboard
+
+Here is the direct comparison on the same ten official test examples from each of the 77 classes:
+
+| Approach | Supervision used | Accuracy | Macro-F1 | Mean inference |
+| --- | --- | ---: | ---: | ---: |
+| MiniLM + linear | 8,463 train + dev selection | **89.87%** | **89.84%** | 1.28 ms |
+| Jev 1.13 Choice + examples | 154 train | 85.32% | 84.99% | 520.03 ms |
+| DSPy + GLM, base | Zero-shot | 82.86% | 82.01% | 1,849.49 ms |
+| TF-IDF + linear | 8,463 train + dev selection | 82.73% | 81.68% | **0.044 ms** |
+| DSPy + GLM, MIPROv2 | 77 train + 77 dev | 82.73% | 81.87% | 1,706.81 ms |
+| Jev 1.13 Choice | Zero-shot | 81.17% | 80.37% | 298.39 ms |
+| DSPy + MiMo-V2.6-Flash | Zero-shot | 80.39% | 79.32% | 3,873.78 ms |
+
+For a larger check, the local models, both Jev arms, and DSPy with MiMo also ran over all 3,080 official test examples:
+
+| Approach | Accuracy | Macro-F1 | Mean inference |
+| --- | ---: | ---: | ---: |
+| MiniLM + linear | **89.12%** | **89.09%** | 1.14 ms |
+| Jev 1.13 Choice + examples | 85.29% | 85.20% | 376.90 ms |
+| TF-IDF + linear | 82.21% | 81.17% | **0.024 ms** |
+| DSPy + MiMo-V2.6-Flash | 80.91% | 80.11% | 4,076.37 ms |
+| Jev 1.13 Choice | 80.10% | 79.37% | 322.86 ms |
+
+The full results preserve the same ordering and nearly the same gaps. Most importantly, Jev's gain from two examples per label holds across the complete test set: **5.19 percentage points of accuracy** and **5.83 points of macro-F1** over definition-only Jev.
+
+## Are Jev's probabilities calibrated?
+
+Accuracy asks how often a classifier is right. **Calibration** asks whether its probabilities mean what they say. Among predictions made at 80%, roughly 80% should be correct. A model can rank labels well and still be badly calibrated—for example, by assigning 99% to many wrong answers.
+
+This matters for Jev because probabilities are part of the product, not an implementation detail. TypeSafe says [System One models are trained for calibrated decisions](https://docs.typesafe.ai/concepts/system-one) and that their probabilities are optimized to reflect uncertainty. It also makes the right qualification: calibration is a property of groups of predictions, not a promise that any individual answer is correct. The docs recommend validating thresholds on your own data.
+
+Jev's Choice response provides two related values. `probabilities` is the complete distribution over options. `confidence` is derived from how concentrated that distribution is: one clear winner produces higher confidence than several plausible options. Concentration is not calibration. To test calibration, I used the probability assigned to the selected label and compared it with how often that label was actually correct.
+
+On the complete 3,080-example test set, I grouped predictions into ten equal-width probability bins and calculated expected calibration error, or ECE. ECE is the weighted average gap between predicted probability and observed accuracy in those bins; lower is better, and zero would be perfect.
+
+| Jev arm | Accuracy | Mean top probability | ECE |
+| --- | ---: | ---: | ---: |
+| Definitions only | 80.10% | 90.05% | 9.95% |
+| Two examples per label | 85.29% | 91.72% | 6.44% |
+
+The definition-only arm was about ten percentage points too sure overall: its selected labels averaged 90.05% probability but were correct 80.10% of the time. Examples improved both classification and calibration, reducing ECE from 9.95% to 6.44%, but the model remained overconfident on this task.
+
+I did not fit temperature scaling or tune thresholds on the test set; that would leak the answers into the reported result. In production, I would fit any calibration layer and action thresholds on separate development data, then verify them on held-out traffic. Jev exposes the probabilities needed to do that, but the probabilities still have to earn trust in the domain where they will be used.
+
+## What this benchmark cannot test
+
+BANKING77 has a fixed taxonomy and a fixed annotation policy. That makes it useful for comparing classifiers, but it cannot measure one of Jev's more interesting properties: changing instructions or decision criteria at runtime.
+
+A trained local classifier learns the old boundary and normally needs new labels and retraining when the policy changes. Jev can receive a revised criterion in the next request. Whether it follows that revision correctly is an empirical question, not a free point on this scoreboard. Testing it would require a separate benchmark with explicit policy changes and held-out examples for both the old and new rules.
+
+# A good demo is not a deployment strategy
+
+Classification has decades of research, engineering, and operational experience behind it. Linear models, embeddings, fine-tuned encoders, calibration methods, abstention policies, and monitoring practices have all been optimized for this job. A conventional classification problem is not an empty field waiting for a general-purpose model to discover it.
+
+That context matters because AI demos can become a little **exa-Jev-rated**. Turning a few descriptions into a working classifier with one API call is genuinely useful—and makes for a compelling demonstration. But the short setup does not erase the accuracy, latency, cost, privacy, calibration, and maintenance trade-offs that appear in production. A striking demo is evidence that something is possible, not that it is the best default.
+
+The established methods earned their place here. With thousands of representative labels, **MiniLM was the obvious winner in this benchmark**: it had the best accuracy, remained fast, and needed no per-request service call. TF-IDF was almost free to run and stayed competitive with the hosted zero-shot systems. Any new approach should have to beat those baselines on the properties that matter, not merely look more modern.
+
+DSPy's typed zero-shot program showed the other side of the trade-off: useful performance without training examples, but much higher latency. MIPROv2 did not improve GLM on this small optimization split, and swapping GLM for MiMo made the same program less accurate and slower here. Neither an optimizer nor a model change is an automatic upgrade.
+
+Jev belongs in the same sober comparison. It did not beat the trained semantic classifier, and I should not imply otherwise. Its advantage is not that decades of classifier work suddenly became obsolete. Its advantage is that it can turn a runtime-defined decision into a bounded, typed probability distribution without first building a task-specific training pipeline.
+
+The example-guided result sharpens that point. Jev benefited greatly from just two examples per option, but those examples are still labeled supervision. The API made that supervision easy to express; it did not make the need for domain knowledge disappear.
+
+That makes Jev a good fit when:
+
+- the choices or decision criteria change at runtime;
+- representative labeled data is scarce or does not exist yet;
+- the application needs probabilities over an explicit set of allowed decisions;
+- the judgment is one component inside a larger policy or state machine;
+- hosted-service latency and cost are acceptable.
+
+Jev is probably the wrong default when:
+
+- the taxonomy is stable and there are enough representative labels;
+- a small local model already meets the accuracy requirement;
+- requests are high-volume, latency-sensitive, offline, private, or cost-sensitive;
+- the task needs independently validated calibration or domain-specific guarantees;
+- “we can do it in one impressive API call” is the main argument for using it.
+
+The supervision difference is the lesson hiding behind the leaderboard. MiniLM won a conventional classification task after receiving thousands of conventional labels. Jev becomes interesting at a different boundary: before that dataset exists, while the decision space is changing, or when its typed probabilities are more useful than a trained model artifact.
+
+# Conclusion
+
+The benchmark code, deterministic importer, split metadata, classifiers, DSPy optimization loop, and reports are in [`classifier-bench`](https://github.com/manojlds/classifier-bench). BANKING77 attribution and source hashes are included in the repository.
+
+My conclusion is less cinematic than the title:
+
+> Do not let an impressive demo overrule decades of classifier practice. Start with the simplest credible baseline, use trained classifiers when the data and task justify them, and use Jev when you specifically need a runtime-defined, bounded probabilistic decision—not because the hype says every decision is now an AI call.

@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" role="img" aria-labelledby="title desc">
+  <title id="title">DSPy and Jev join forces</title>
+  <desc id="desc">Two friendly geometric characters labelled DSPy and Jev connect a typed Choice decision while ReAnchor adjusts three probability weights below them.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset=".55" stop-color="#10162a"/>
+      <stop offset="1" stop-color="#1a1025"/>
+    </linearGradient>
+    <radialGradient id="arena" cx="50%" cy="48%" r="54%">
+      <stop offset="0" stop-color="#31d7e8" stop-opacity=".18"/>
+      <stop offset=".52" stop-color="#e967c2" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#07111f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="jev" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#39e4ff"/>
+      <stop offset=".52" stop-color="#66efb9"/>
+      <stop offset="1" stop-color="#e967c2"/>
+    </linearGradient>
+    <linearGradient id="dspy" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#cf8cff"/>
+      <stop offset=".55" stop-color="#e967c2"/>
+      <stop offset="1" stop-color="#ffb36b"/>
+    </linearGradient>
+    <linearGradient id="bridge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e967c2"/>
+      <stop offset=".5" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#39e4ff"/>
+    </linearGradient>
+    <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse">
+      <path d="M44 0H0V44" fill="none" stroke="#91a6bd" stroke-opacity=".045"/>
+    </pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#02050b" flood-opacity=".55"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="760" rx="28" fill="url(#bg)"/>
+  <rect width="1400" height="760" rx="28" fill="url(#arena)"/>
+  <rect width="1400" height="760" rx="28" fill="url(#grid)"/>
+
+  <!-- stars / decision particles -->
+  <g fill="#dcecff" opacity=".42">
+    <circle cx="126" cy="112" r="3"/><circle cx="232" cy="630" r="2"/><circle cx="1188" cy="126" r="2.5"/>
+    <circle cx="1284" cy="586" r="3"/><circle cx="357" cy="116" r="2"/><circle cx="1040" cy="664" r="2"/>
+  </g>
+  <g stroke="#91a6bd" stroke-width="2" opacity=".3">
+    <path d="M179 184v22M168 195h22"/><path d="M1221 235v24M1209 247h24"/>
+    <path d="M1093 98v16M1085 106h16"/><path d="M299 563v18M290 572h18"/>
+  </g>
+
+  <!-- central typed contract -->
+  <g filter="url(#softShadow)">
+    <rect x="492" y="103" width="416" height="178" rx="28" fill="#0c1627" stroke="#aabbd0" stroke-opacity=".35" stroke-width="2"/>
+    <rect x="520" y="131" width="118" height="32" rx="16" fill="#222b42" stroke="#cf8cff" stroke-opacity=".65"/>
+    <text x="579" y="153" fill="#e7cbff" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" font-weight="700" text-anchor="middle">OUTPUT</text>
+    <text x="700" y="209" fill="#f5f8ff" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="34" font-weight="700" text-anchor="middle">Choice[Intent]</text>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="middle">
+      <rect x="535" y="232" width="99" height="27" rx="13.5" fill="#17243a"/><text x="584" y="251" fill="#65e7f6">transfer</text>
+      <rect x="650" y="232" width="99" height="27" rx="13.5" fill="#17243a"/><text x="699" y="251" fill="#76efbd">cash</text>
+      <rect x="765" y="232" width="108" height="27" rx="13.5" fill="#17243a"/><text x="819" y="251" fill="#f18ad1">refund</text>
+    </g>
+  </g>
+
+  <!-- DSPy character -->
+  <g filter="url(#softShadow)">
+    <path d="M280 291l144-42 115 93-37 177-168 29-105-113z" fill="#111a2d" stroke="url(#dspy)" stroke-width="6"/>
+    <path d="M286 313l134-38 91 75-30 143-139 24-87-94z" fill="url(#dspy)" opacity=".12"/>
+    <circle cx="350" cy="376" r="12" fill="#f5f8ff"/><circle cx="438" cy="376" r="12" fill="#f5f8ff"/>
+    <circle cx="353" cy="379" r="5" fill="#10162a"/><circle cx="435" cy="379" r="5" fill="#10162a"/>
+    <path d="M356 426q39 31 78 0" fill="none" stroke="#f5f8ff" stroke-width="7" stroke-linecap="round"/>
+    <text x="388" y="480" fill="#f5f8ff" font-family="ui-sans-serif, system-ui, sans-serif" font-size="31" font-weight="800" text-anchor="middle">DSPy</text>
+  </g>
+
+  <!-- Jev character -->
+  <g filter="url(#softShadow)">
+    <path d="M860 340l104-91 157 34 52 153-101 120-164-29-68-140z" fill="#111a2d" stroke="url(#jev)" stroke-width="6"/>
+    <path d="M884 350l87-75 130 29 43 127-84 99-136-24-57-117z" fill="url(#jev)" opacity=".13"/>
+    <circle cx="961" cy="376" r="12" fill="#f5f8ff"/><circle cx="1049" cy="376" r="12" fill="#f5f8ff"/>
+    <circle cx="964" cy="379" r="5" fill="#10162a"/><circle cx="1046" cy="379" r="5" fill="#10162a"/>
+    <path d="M966 426q39 31 78 0" fill="none" stroke="#f5f8ff" stroke-width="7" stroke-linecap="round"/>
+    <text x="1004" y="480" fill="#f5f8ff" font-family="ui-sans-serif, system-ui, sans-serif" font-size="31" font-weight="800" text-anchor="middle">Jev</text>
+  </g>
+
+  <!-- joined hands / adapter bridge -->
+  <path d="M504 379C574 330 613 326 671 371" fill="none" stroke="#e967c2" stroke-width="20" stroke-linecap="round"/>
+  <path d="M896 379C826 330 787 326 729 371" fill="none" stroke="#39e4ff" stroke-width="20" stroke-linecap="round"/>
+  <g filter="url(#glow)">
+    <path d="M658 355l42 22 42-22 24 28-37 38h-58l-37-38z" fill="#0e1829" stroke="url(#bridge)" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M682 381h36" stroke="#f5f8ff" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <!-- ReAnchor decision-rule panel -->
+  <g filter="url(#softShadow)">
+    <rect x="405" y="585" width="590" height="104" rx="24" fill="#0b1424" stroke="#899db7" stroke-opacity=".34" stroke-width="2"/>
+    <text x="445" y="622" fill="#b9c8dc" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" font-weight="700">ReAnchor</text>
+    <g stroke-linecap="round">
+      <path d="M572 618h354" stroke="#314158" stroke-width="8"/>
+      <path d="M572 647h354" stroke="#314158" stroke-width="8"/>
+      <path d="M572 676h354" stroke="#314158" stroke-width="8"/>
+      <path d="M572 618h218" stroke="#e967c2" stroke-width="8"/>
+      <path d="M572 647h286" stroke="#66efb9" stroke-width="8"/>
+      <path d="M572 676h145" stroke="#39e4ff" stroke-width="8"/>
+    </g>
+    <g fill="#f5f8ff" stroke="#111a2d" stroke-width="4">
+      <circle cx="790" cy="618" r="10"/><circle cx="858" cy="647" r="10"/><circle cx="717" cy="676" r="10"/>
+    </g>
+  </g>
+
+  <text x="700" y="730" fill="#8fa3bc" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" letter-spacing="3" text-anchor="middle">FORMER RIVALS · ONE PROGRAM</text>
+</svg>

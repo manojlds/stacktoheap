@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Pi Durable: an agent recovers from a process crash</title>
+  <desc id="description">Two illustrated robot agents show the same work before and after recovery. On the left, a robot has slumped after a process crash, with a dark face and a fractured shell. A warm, glowing checkpoint remains on a stack of saved records between them. On the right, a restarted robot reads those records, with its face and work display lit again. A luminous thread connects the checkpoint to the recovered agent.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2=".6"><stop stop-color="#191b30"/><stop offset=".5" stop-color="#101d30"/><stop offset="1" stop-color="#123637"/></linearGradient>
+    <radialGradient id="red"><stop stop-color="#c36370" stop-opacity=".19"/><stop offset="1" stop-color="#c36370" stop-opacity="0"/></radialGradient>
+    <radialGradient id="teal"><stop stop-color="#66debf" stop-opacity=".2"/><stop offset="1" stop-color="#66debf" stop-opacity="0"/></radialGradient>
+    <linearGradient id="body" x2="1" y2="1"><stop stop-color="#a2b7c7"/><stop offset=".48" stop-color="#6e8ca4"/><stop offset="1" stop-color="#3f5e79"/></linearGradient>
+    <linearGradient id="dimBody" x2="1" y2="1"><stop stop-color="#6c7c96"/><stop offset=".5" stop-color="#48546e"/><stop offset="1" stop-color="#303a53"/></linearGradient>
+    <linearGradient id="edge" x2="0" y2="1"><stop stop-color="#d0e3e6"/><stop offset="1" stop-color="#648599"/></linearGradient>
+    <linearGradient id="gold" x2="1" y2="1"><stop stop-color="#ffe6b6"/><stop offset=".5" stop-color="#eab26c"/><stop offset="1" stop-color="#9f6b3b"/></linearGradient>
+    <radialGradient id="saved"><stop stop-color="#ffdda2" stop-opacity=".45"/><stop offset="1" stop-color="#ffdda2" stop-opacity="0"/></radialGradient>
+    <linearGradient id="thread" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#b78361"/><stop offset=".45" stop-color="#ffdca0"/><stop offset="1" stop-color="#88f2ce"/></linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter>
+    <filter id="shadow"><feGaussianBlur stdDeviation="14"/></filter>
+    <pattern id="grain" width="21" height="23" patternUnits="userSpaceOnUse"><circle cx="3" cy="4" r=".65" fill="#e5e8ee" opacity=".04"/><circle cx="14" cy="17" r=".5" fill="#e5e8ee" opacity=".035"/></pattern>
+    <g id="record">
+      <path d="M-88-5L24-25 88 0-24 23Z" fill="#466777" stroke="#83a0aa" stroke-width="1"/>
+      <path d="M-88-5L-24 23-24 36-88 8Z" fill="#547482"/>
+      <path d="M-24 23L88 0 88 13-24 36Z" fill="#2a485c"/>
+      <path d="M-13 27L76 9" stroke="#86a5ac" opacity=".6"/>
+    </g>
+    <path id="work" d="M402 389C468 379 466 427 527 413S565 375 602 371S681 428 732 397S757 361 782 356" fill="none" stroke="url(#thread)" stroke-width="4" stroke-linecap="round"/>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <ellipse cx="337" cy="337" rx="330" ry="260" fill="url(#red)"/>
+  <ellipse cx="896" cy="353" rx="340" ry="280" fill="url(#teal)"/>
+  <g stroke="#789ba8" opacity=".1" fill="none"><path d="M0 521Q600 429 1200 511M0 565Q600 473 1200 555M0 609Q600 517 1200 599"/><path d="M118 630L438 456M466 630L584 445M814 630L730 447M1162 630L876 456"/></g>
+  <ellipse cx="602" cy="515" rx="438" ry="35" fill="#040b16" opacity=".65" filter="url(#shadow)"/>
+  <!-- Failed process: the robot is a visual metaphor, not a product mascot. -->
+  <g transform="translate(341 376) rotate(-13)">
+    <path d="M-75 99L-95 113Q-101 123-88 126L-23 126-20 110-37 102Z" fill="#39445c" stroke="#68758e"/>
+    <path d="M20 103L15 121Q18 129 31 130L83 130Q97 123 86 116L63 101Z" fill="#39445c" stroke="#68758e"/>
+    <path d="M-52 48L-57 103M46 49L44 107" stroke="#343e55" stroke-width="30" stroke-linecap="round"/>
+    <path d="M-52 61L-57 90M46 62L44 95" stroke="#65728b" stroke-width="16" stroke-linecap="round"/>
+    <path d="M-80-23Q-102-15-105 17L-96 52M79-26Q97-19 98 8L109 38" fill="none" stroke="#354159" stroke-width="22" stroke-linecap="round"/>
+    <circle cx="-97" cy="55" r="14" fill="#607087"/><circle cx="110" cy="40" r="14" fill="#607087"/>
+    <rect x="-78" y="-59" width="156" height="122" rx="29" fill="url(#dimBody)" stroke="#77829b" stroke-width="2"/>
+    <rect x="-47" y="-34" width="94" height="60" rx="12" fill="#1b263a" stroke="#55657e"/>
+    <path d="M-29-10L-20-10M-9-10L0-10M11-10L20-10M-29 4L-13 4" stroke="#58657a" stroke-width="4" stroke-linecap="round"/>
+    <circle cy="44" r="5" fill="#d78486"/>
+    <path d="M-23-70L23-70" stroke="#3f4d65" stroke-width="20" stroke-linecap="round"/>
+    <g transform="translate(-10 -126) rotate(-14)">
+      <path d="M0-57L0-70" stroke="#738199" stroke-width="5"/><circle cy="-73" r="6" fill="#9b737d"/>
+      <rect x="-77" y="-49" width="154" height="93" rx="29" fill="url(#dimBody)" stroke="#8590a5" stroke-width="2"/>
+      <rect x="-61" y="-33" width="122" height="60" rx="20" fill="#172033"/>
+      <g stroke="#a18391" stroke-width="4" stroke-linecap="round"><path d="M-36-12L-24 0M-24-12L-36 0M24-12L36 0M36-12L24 0"/></g>
+      <path d="M-16 13L16 13" stroke="#586175" stroke-width="3" stroke-linecap="round"/>
+      <path d="M46-47L34-28 46-16 37 0 52 17 44 42" fill="none" stroke="#b092a5" stroke-width="2"/>
+      <rect x="-87" y="-18" width="9" height="27" rx="4" fill="#68758d"/><rect x="78" y="-18" width="9" height="27" rx="4" fill="#68758d"/>
+    </g>
+  </g>
+  <!-- A few fallen pieces reinforce a process crash, not deletion of records. -->
+  <g fill="#5c667f" stroke="#9c8297" stroke-opacity=".6"><path d="M193 499L218 489 223 505 203 513Z"/><path d="M426 506L440 493 452 502 435 514Z"/><path d="M462 480L474 475 479 486 467 489Z"/></g>
+  <g fill="none" stroke="#b07888" stroke-opacity=".3"><path d="M193 261L179 252M208 234L202 218M436 227L447 216"/></g>
+  <!-- The committed checkpoint remains intact between process lifetimes. -->
+  <ellipse cx="601" cy="425" rx="123" ry="113" fill="url(#saved)"/>
+  <g transform="translate(603 450)"><use href="#record" y="27"/><use href="#record" y="10"/><use href="#record" y="-7"/></g>
+  <g transform="translate(601 403)">
+    <path d="M-35-22L0-39 35-22 35 17 0 36-35 17Z" fill="#bd8b52" stroke="#f4c78e"/>
+    <path d="M-35-22L0-39 35-22 0-3Z" fill="#ffe6b8"/>
+    <path d="M0-3L35-22 35 17 0 36Z" fill="#d7a268"/>
+    <path d="M-35-22L0-3 0 36-35 17Z" fill="url(#gold)"/>
+    <path d="M-11 0L-3 7 11-8" fill="none" stroke="#674923" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cy="-23" rx="38" ry="18" fill="#ffda9d" opacity=".5" filter="url(#glow)"/>
+  </g>
+  <use href="#work" filter="url(#glow)" opacity=".7"/>
+  <use href="#work"/>
+  <g fill="#ffe4b6"><circle cx="466" cy="401" r="4"/><circle cx="602" cy="371" r="6"/><circle cx="732" cy="397" r="4"/></g>
+  <!-- New process: same agent role, now reading saved progress and continuing. -->
+  <g transform="translate(872 350)">
+    <path d="M-59 122L-75 138Q-79 147-65 150L-17 150Q-4 147-9 138L-26 127Z" fill="#58758a" stroke="#94b5c1"/>
+    <path d="M32 124L20 142Q21 151 35 151L83 151Q94 146 87 139L63 127Z" fill="#58758a" stroke="#94b5c1"/>
+    <path d="M-42 62L-43 119M44 62L47 121" stroke="#36566d" stroke-width="29" stroke-linecap="round"/>
+    <path d="M-42 79L-43 108M45 79L47 111" stroke="#8ea8b8" stroke-width="17" stroke-linecap="round"/>
+    <path d="M-78-16Q-95-1-102 28L-134 23M78-16Q101-1 104 27L121 4" fill="none" stroke="#7795aa" stroke-width="23" stroke-linecap="round"/>
+    <circle cx="-101" cy="28" r="13" fill="#b6c8d0"/>
+    <circle cx="104" cy="27" r="13" fill="#b6c8d0"/>
+    <rect x="-78" y="-49" width="156" height="129" rx="29" fill="url(#body)" stroke="#bdd5df" stroke-width="2"/>
+    <path d="M-62 56Q0 75 62 56" fill="none" stroke="#b4cbd4" stroke-opacity=".5"/>
+    <rect x="-49" y="-24" width="98" height="66" rx="12" fill="#102a35" stroke="#b4d8db" stroke-opacity=".6"/>
+    <path d="M-33-6L-22 2-33 10M-12 12L1 12" fill="none" stroke="#b1f2d6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M-33 27L-12 27M-5 27L14 27M21 27L33 27" stroke="#77c8b6" stroke-width="3" stroke-linecap="round"/>
+    <circle cy="62" r="5" fill="#b0f4cc"/>
+    <path d="M-23-61L23-61" stroke="#52768d" stroke-width="20" stroke-linecap="round"/>
+    <g transform="translate(0 -115)">
+      <path d="M0-57L0-72" stroke="#a8c7d2" stroke-width="5"/><circle cy="-76" r="7" fill="#a3f3d6"/><circle cy="-76" r="14" fill="#86f5c4" opacity=".4" filter="url(#glow)"/>
+      <rect x="-77" y="-49" width="154" height="93" rx="29" fill="url(#body)" stroke="#c3dce3" stroke-width="2"/>
+      <rect x="-62" y="-33" width="124" height="61" rx="20" fill="#122d38" stroke="#86cbbd" stroke-opacity=".3"/>
+      <g fill="#b0f7da"><rect x="-37" y="-17" width="14" height="20" rx="7"/><rect x="23" y="-17" width="14" height="20" rx="7"/></g>
+      <path d="M-14 13Q0 23 14 13" fill="none" stroke="#9be9ce" stroke-width="3" stroke-linecap="round"/>
+      <path d="M-50-39Q0-53 50-39" stroke="#e1edf0" stroke-opacity=".4" fill="none"/>
+      <rect x="-87" y="-18" width="9" height="27" rx="4" fill="#94b3c3"/><rect x="78" y="-18" width="9" height="27" rx="4" fill="#94b3c3"/>
+    </g>
+    <g transform="translate(-143 8) rotate(-10)">
+      <rect x="-31" y="-26" width="72" height="54" rx="7" fill="#1d3e4c" stroke="#c9c9a5" stroke-width="2"/>
+      <path d="M-17-11L-10-4-1-15M8-11L26-11M-17 6L25 6M-17 16L11 16" fill="none" stroke="#ffdfa4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <circle cx="120" cy="2" r="14" fill="url(#edge)"/>
+  </g>
+  <g fill="none" stroke="#81dbbd" stroke-width="2" opacity=".5"><path d="M1010 271L1024 263M1014 297L1032 297M1001 244L1008 229"/></g>
+  <rect width="1200" height="630" fill="url(#grain)"/>
+  <g font-family="system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+    <text x="62" y="54" fill="#a8bdcb" font-size="12" font-weight="600" letter-spacing="3.5">EXPLORING PI</text>
+    <text x="58" y="129" fill="#f7f2e8" font-size="68" font-weight="750" letter-spacing="-2.5">Pi Durable</text>
+    <text x="62" y="169" fill="#bdcbd5" font-size="22">The process crashes. The work has a way back.</text>
+    <text x="331" y="550" text-anchor="middle" fill="#bf9aaa" font-size="13" font-weight="600" letter-spacing="2">PROCESS LOST</text>
+    <text x="603" y="550" text-anchor="middle" fill="#e8c28d" font-size="13" font-weight="600" letter-spacing="1.5">SAVED CHECKPOINT</text>
+    <text x="876" y="550" text-anchor="middle" fill="#a3ddc9" font-size="13" font-weight="600" letter-spacing="2">WORK RECOVERED</text>
+    <text x="600" y="598" text-anchor="middle" fill="#8da7b8" font-size="14">A new process. The same unfinished work.</text>
+  </g>
+</svg>

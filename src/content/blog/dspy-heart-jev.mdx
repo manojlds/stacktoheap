@@ -1,0 +1,464 @@
+---
+title: "DSPy ♥ Jev: Typed Decisions, One Program, and ReAnchor"
+excerpt: "DSPy gets first-class support for System One models, plus an optimizer for tuning how programs act on their decisions."
+date: 2026-09-25
+reading_time: 14 mins
+categories: [ai, machine-learning]
+tags: [jev, typesafe, dspy, reanchor, gliner, classification, banking77]
+hero_image: /images/dspy-heart-jev-hero.png
+comments: true
+draft: false
+series:
+  name: "Jev as a bounded decision maker"
+  part: 4
+---
+
+In the [previous article](/blog/2026/09/22/jev-attack-of-the-classifiers), I arranged an attack of the classifiers. Jev, TF-IDF, MiniLM, and an LLM program built with DSPy entered the arena. MiniLM won, Jev held its ground, and several API credits were remembered with appropriate solemnity.
+
+The attackers are becoming friends.
+
+DSPy 3.4 gives System One models first-class support. Jev no longer has to stand across the scoreboard from DSPy; it can sit behind an ordinary DSPy signature. The framework that sent an LLM into my last contest can now program Jev directly, preserve its probability evidence, and optimize how the application turns those probabilities into decisions.
+
+DSPy already makes structured outputs much safer than prompt-and-parse code: a signature declares the output type, and its adapters ask a generative model for that shape, parse it, and validate the result. System One support changes the model contract underneath that abstraction. The smallest example does not require a new signature at all.
+
+This gave me two new questions:
+
+1. Can the exact same DSPy program run against Jev and the new GLiNER2.5-Decide model?
+2. What does DSPy's new `ReAnchor` optimizer actually calibrate?
+
+The second question turned out to contain a naming trap. We will get there.
+
+Install the integration with:
+
+```bash
+pip install "dspy[typesafe]==3.4.0"
+export TYPESAFE_API_KEY=...
+```
+
+# Start with an ordinary DSPy signature
+
+This is a normal DSPy program. There is no Jev-specific type in it:
+
+```python
+import dspy
+
+
+class ReviewPayment(dspy.Signature):
+    """Decide whether a payment report needs human review."""
+
+    report: str = dspy.InputField(desc="The customer's payment report.")
+    needs_review: bool = dspy.OutputField(
+        desc="Does this payment report require human review?"
+    )
+
+
+review_payment = dspy.Predict(ReviewPayment)
+```
+
+Run it with a generative LM and DSPy's adapter asks the model for a Boolean,
+parses the response, and validates it:
+
+```python
+with dspy.context(lm=dspy.LM("openai/your-model")):
+    result = review_payment(report="I do not recognize this card payment.")
+
+print(result.needs_review)  # bool
+```
+
+Now give the same program to Jev:
+
+```python
+from dspy.experimental import TypeSafe
+
+with dspy.context(lm=TypeSafe("jev-1.13.0")):
+    result = review_payment(report="I do not recognize this card payment.")
+
+print(result.needs_review)  # still a bool
+```
+
+Nothing in `ReviewPayment` changed. DSPy recognizes the `bool` output as a
+yes-or-no decision, translates it into a System One question, and derives the
+Boolean result from the probability Jev returns.
+
+This is the compatibility contract, stated without suspense: a `Predict`
+signature works with a System One backend when every output is a supported closed
+decision. Plain `bool` maps to yes-or-no; `Literal[...]` maps to a choice. Each
+output needs a non-empty `desc` phrased as the question to answer. Inputs can be
+ordinary strings, numbers, lists, or structured objects.
+
+Jev is not a chat model, so a free-form `str` output does not quietly fall back to
+text generation. DSPy rejects an incompatible output before making the request.
+That narrower contract is the point.
+
+# When the program needs the evidence
+
+The ordinary signature returned a plain `bool`. That is enough if the application
+only needs the answer—even if I later use ReAnchor. If application code itself
+needs to inspect the probability—for a custom review policy, an audit log, or an
+uncertainty display—DSPy 3.4 exposes three rich decision types through
+`dspy.experimental`:
+
+| Type | Use it when | Evidence returned |
+| --- | --- | --- |
+| `Noul` | The answer is yes or no | value and probability of true |
+| `Choice[...]` | Exactly one option should win | value, probability per option, confidence |
+| `Score[...]` | The answer lies on an ordered rubric | continuous value, level probabilities, confidence |
+
+These types work with generative LMs too. The difference is underneath the DSPy
+abstraction: an LM generates the requested evidence structure for the adapter to
+parse, while Jev returns decision probabilities natively.
+
+# The classifier gets a type, not a parsing problem
+
+Here is the core classifier. The criteria are attached to the type, not hidden
+inside a prompt template:
+
+```python
+import dspy
+from dspy.experimental import Choice, TypeSafe
+
+Intent = Choice[
+    ("card_arrival", "The customer is asking about card arrival."),
+    ("card_linking", "The customer is asking about linking a card."),
+    ("cash_withdrawal_charge", "The customer was charged for a cash withdrawal."),
+    # ...the remaining BANKING77 intents
+]
+
+
+class ClassifyIntent(dspy.Signature):
+    """Which single BANKING77 intent best describes the customer's request?"""
+
+    message: str = dspy.InputField(desc="The complete customer message.")
+    intent: Intent = dspy.OutputField(desc="Select the single best-matching intent.")
+
+
+classifier = dspy.Predict(ClassifyIntent)
+dspy.configure(lm=TypeSafe("jev-1.13.0"))
+
+result = classifier(message="Why did the ATM charge me a fee?")
+
+print(result.intent.value)
+print(result.intent.probabilities)
+print(result.intent.confidence)
+```
+
+`result.intent.value` is the label your router uses. `probabilities` preserves
+the distribution across all 77 labels. `confidence` summarizes how concentrated
+that Choice distribution is; it is not a second probability of correctness.
+
+I could express the answer space as a plain `Literal` and still run it on Jev.
+The richer `Choice` earns its place here by attaching a description to each opaque
+BANKING77 label and preserving the full distribution. The application gets more
+evidence without becoming coupled to the backend that produced it.
+
+The runnable version in my [`classifier-bench`](https://github.com/manojlds/classifier-bench) repository builds the `Choice` dynamically from `data/banking77/task.json`:
+
+```bash
+TYPESAFE_API_KEY=... \
+  npm run demo:dspy-jev -- "Why did the ATM charge me a fee?"
+```
+
+# One DSPy program, two decision models
+
+The application should not know whether Jev or GLiNER produced the distribution.
+Only the backend changes:
+
+```python
+program = JevIntentClassifier(instructions, labels, criteria)
+
+with dspy.context(lm=jev):
+    jev_result = program(message=message)
+
+with dspy.context(lm=gliner):
+    gliner_result = program(message=message)
+```
+
+For hosted Jev, the backend is native:
+
+```python
+jev = TypeSafe("jev-1.13.0")
+```
+
+I served `fastino/GLiNER2.5-Decide` locally behind a System One-shaped endpoint. “Shaped” is doing some work in that sentence.
+
+DSPy sends structured state containing its signature instructions, field descriptions, and inputs. My local GLiNER server accepts only a string state and omits TypeSafe's `usage` object. I therefore added a small transport adapter that extracts `state["inputs"]["message"]` and normalizes the response. The signature, `Predict` module, criteria, metric, and evaluation code stay unchanged.
+
+That is “the same DSPy code,” not “every server implements the exact same wire
+protocol.” The distinction matters.
+
+# BANKING77 asks for another rematch
+
+The benchmark is BANKING77: 77 fine-grained banking support intents. Both models
+receive the same DSPy signature, label names, definitions, seed, metric, and data
+splits. They are evaluated on the same stratified sample of 770 official test
+examples—ten per class.
+
+| DSPy backend | Accuracy | Macro-F1 |
+| --- | ---: | ---: |
+| Jev 1.13 | **80.52%** | **79.60%** |
+| GLiNER2.5-Decide | 70.26% | 69.53% |
+
+Jev led by 10.26 percentage points in accuracy on this task. That is a convincing win on BANKING77, not a deed granting Jev ownership of classification. An earlier direct
+System One protocol run on a different deterministic 770-example sample found
+81.17% for Jev and 68.70% for GLiNER, but those are not the headline numbers here:
+the table above comes from the new matched DSPy harness.
+
+I would not generalize the result to every decision problem. BANKING77 has many
+semantically adjacent labels, and GLiNER2.5-Decide's model card reports strong
+results on a broader 17-domain decision suite. This harness also intentionally
+does not compare latency: Jev is hosted while GLiNER runs through a local server,
+so that would measure deployments as much as models.
+
+The repository now includes one harness that runs either backend through the
+same DSPy `Choice` program:
+
+```bash
+# Jev baseline
+TYPESAFE_API_KEY=... uv run classifier-dspy-decisions \
+  --model jev-1.13.0 \
+  --output reports/banking77/dspy-jev.json
+
+# Local GLiNER System One-shaped server
+uv run classifier-dspy-decisions \
+  --model fastino/GLiNER2.5-Decide \
+  --base-url http://127.0.0.1:18093 \
+  --string-state \
+  --output reports/banking77/dspy-gliner.json
+```
+
+Keep the model version, sample IDs, criteria hash, and serving configuration with
+the report. “Same code” does not make two changing model aliases reproducible.
+
+# ReAnchor is not the calibration you are thinking of
+
+A model can return useful probabilities while the default decision boundary is wrong for the application. ReAnchor moves that boundary without retraining the model.
+
+Examples:
+
+- a yes/no fraud gate may need a threshold above 0.5;
+- an ordinal severity score may need different cuts between levels; or
+- one class in a large `Choice` taxonomy may win too often or not often enough.
+
+`ReAnchor` fits those **local interpretation parameters** against your program's
+metric:
+
+- thresholds for `Noul`;
+- cuts for `Score`; and
+- per-option weights for `Choice`.
+
+It does not rewrite the criteria, retrain the model, or ask the model to explain
+itself. It optimizes how the program reads the distribution.
+
+## What the search actually does
+
+Take the simplest case: a `Noul` whose default threshold is `0.5`. Suppose Jev
+returns these probabilities on four training examples:
+
+```text
+0.18, 0.41, 0.63, 0.90
+```
+
+At `0.5`, the first two become `False` and the last two become `True`. Moving the
+threshold from `0.50` to `0.55` changes nothing. Neither does `0.61`. Every
+threshold in the gap between `0.41` and `0.63` produces exactly the same four
+answers.
+
+So ReAnchor does not shuffle through arbitrary decimal numbers. It sorts the
+probabilities and tries a representative midpoint in each gap: `0.295`, `0.52`,
+and `0.765` in this example. Those are the places where crossing from one gap to
+another can flip at least one answer. ReAnchor scores each resulting set of
+decisions with the metric supplied by the program.
+
+The three decision types need slightly different candidate searches:
+
+| Output | What stays fixed | What ReAnchor searches |
+| --- | --- | --- |
+| `Noul` | probability of `True` | a threshold between observed probabilities |
+| `Score` | probability distribution and its mean level index | ordered cuts between observed mean values |
+| `Choice` | probability of every option | per-option multipliers at points where the winning option would change |
+
+For this BANKING77 program, the last row matters. A `Choice` selects the label
+with the largest `probability[label] * weight[label]`. All weights begin at `1.0`.
+ReAnchor changes one label's weight at a time and needs to try only values where
+that multiplication would make a training example choose a different winner.
+It does not rewrite or renormalize the original probabilities, and it does not
+recalculate confidence after changing the winner.
+
+There are still two ways a clever search can fool itself: finding a tiny training
+gain and finding a gain caused by one peculiar example. ReAnchor guards against
+both. A candidate must strictly improve the whole training score. It must also
+pass a fold check: DSPy divides the training examples into up to five parts,
+chooses a setting on the other parts, and measures it on the held-out part. The
+combined held-out score must beat the current setting. This is not a guarantee
+against overfitting, but it makes “I fixed one example I just saw” less persuasive.
+
+Finally, the expensive part happens once. ReAnchor runs the program to collect
+the probability evidence, then evaluates candidate thresholds, cuts, and weights
+locally. Identical requests reuse DSPy's cache. For a single `Predict` such as
+this classifier, the search makes no additional Jev or LLM calls after that
+evidence pass. A composed program is more subtle: changing an upstream decision
+can change a downstream request, which may require a new call.
+
+That also explains how ReAnchor differs from DSPy's better-known optimizers. GEPA
+can improve a generative LM program by changing its instructions. ReAnchor leaves
+the words alone and fits the numbers after the model has spoken. A decision-typed
+signature can be run with an LM and optimized with either lever; the TypeSafe/Jev
+path supports the cheaper numerical one.
+
+ReAnchor is not limited to the rich types. For a plain `bool` or `Literal[...]`
+output, it enables probability-based execution internally, fits the threshold or
+weights, and still returns an ordinary Python value. Use `Noul`, `Score`, or
+`Choice` when the application—not merely the optimizer—needs to see the evidence.
+
+For a multiclass intent router, the metric can be exact match:
+
+```python
+from dspy.experimental import ReAnchor
+
+
+def exact_match(example, prediction, trace=None):
+    return float(prediction.intent.value == example.intent)
+
+
+optimizer = ReAnchor(metric=exact_match, num_threads=8)
+optimized = optimizer.compile(
+    classifier,
+    trainset=train_examples,
+    valset=validation_examples,
+)
+
+print(optimizer.report)
+optimized.save("banking77-reanchor.json")
+```
+
+ReAnchor fits on `trainset`. The optional `valset` is reported but is not used to
+fit the parameters or choose a candidate. The returned program is a copy; the
+original is unchanged.
+
+This is where I initially tripped over the word “calibration.” The official
+[ReAnchor documentation](https://dspy.ai/current/api/experimental/ReAnchor/) says
+that it “fits the numeric decision settings in a program to your metric” and
+summarizes the operation as “calibrate a program's decisions.” I will call that
+**decision-rule calibration against an application metric**. It is not probability
+calibration in the ECE, Brier-score, temperature-scaling, or reliability-diagram
+sense. ReAnchor does not train the returned probabilities to match empirical
+frequencies, and it does not make the raw probabilities truer. That distinction
+is easy to miss because both activities begin with probabilities and end with
+better behavior. They are still different jobs.
+
+# GLiNER gives ReAnchor something to move
+
+I fitted ReAnchor with two training and two development examples per class—154
+examples in each split—and evaluated once on a separate stratified set of 770
+official test examples.
+
+| GLiNER program | Accuracy | Macro-F1 |
+| --- | ---: | ---: |
+| Original `Choice` rule | 70.26% | 69.53% |
+| After ReAnchor | **71.30%** | **70.40%** |
+
+The held-out gain was 1.04 accuracy points and 0.87 macro-F1 points. On the fit
+split, exact match moved from 66.23% to 71.43%; on the untouched development
+split it moved from 59.09% to 60.39%.
+
+The selected configuration mostly retained weight `1.0`, but adjusted four
+class-selection weights in response to recurring fit-sample errors. The raw
+provider probabilities remain evidence from the original model; ReAnchor changes
+which weighted option the program selects.
+
+This is encouraging, not a parade. Two examples per class is deliberately
+small, and class weights can overfit. The development gain and ReAnchor's fold
+checks are useful safeguards, but the final judgment comes from the untouched
+test set and, eventually, production traffic.
+
+Run the experiment with:
+
+```bash
+uv run classifier-dspy-decisions \
+  --data-dir data/banking77 \
+  --model fastino/GLiNER2.5-Decide \
+  --base-url http://127.0.0.1:18093 \
+  --string-state \
+  --train-per-class 2 \
+  --val-per-class 2 \
+  --test-per-class 10 \
+  --reanchor \
+  --num-threads 8 \
+  --output reports/banking77/dspy-gliner2.5-decide-reanchor.json
+```
+
+# ReAnchor leaves Jev's decision rule unchanged
+
+ReAnchor ran the same search on Jev, but none of its candidate `Choice` weights
+improved the training metric and passed the fold check. It therefore restored the
+original all-`1.0` weights rather than returning a worse or more fragile policy:
+
+| Jev program | Accuracy | Macro-F1 |
+| --- | ---: | ---: |
+| Original `Choice` rule | **80.52%** | **79.60%** |
+| After ReAnchor | **80.52%** | **79.60%** |
+
+Jev scored 79.22% on the fit split before and after optimization and 76.62% on
+the separate development split. ReAnchor rejected its candidate weights with
+the reason `fitted behavior did not beat the original`. This does not mean Jev
+made no errors, or that no better decision policy could exist. It means that with
+this small training set, this metric, and the candidates ReAnchor tested, no
+change earned its way into the returned program. It also says nothing about
+whether Jev's probabilities are statistically well calibrated; that would require
+a separate held-out evaluation with measures such as Brier score, ECE, and
+reliability diagrams. This no-change result is useful. An optimizer that sometimes
+says “leave it alone” is doing more science than one that always returns a victory
+banner.
+
+```bash
+TYPESAFE_API_KEY=... uv run classifier-dspy-decisions \
+  --data-dir data/banking77 \
+  --model jev-1.13.0 \
+  --train-per-class 2 \
+  --val-per-class 2 \
+  --test-per-class 10 \
+  --reanchor \
+  --num-threads 8 \
+  --output reports/banking77/dspy-jev-1.13-reanchor.json
+```
+
+Do not fit on the test set, and do not select between runs using test accuracy.
+
+# What I would use this for
+
+The most compelling part of DSPy 3.4 is not shorter classification code. It is
+the separation of responsibilities:
+
+- the signature defines the semantic contract;
+- the backend supplies typed probability evidence;
+- DSPy composes and evaluates the program;
+- ReAnchor tunes the local decision policy; and
+- application code owns escalation, routing, and side effects.
+
+That is a good fit for ticket routing, moderation, extraction verification,
+agent handoff, and other places where software needs a bounded judgment rather
+than another paragraph of generated text.
+
+The APIs are experimental, so I pinned DSPy 3.4 and the model versions. But the direction is promising: program the decision once, compare specialized models behind it, and optimize the behavior the application actually measures.
+
+# Conclusion
+
+The most interesting result was not Jev beating GLiNER by ten points, or ReAnchor finding one extra point for GLiNER. It was that the application program stayed recognizable while all of those pieces moved underneath it.
+
+DSPy's signature described the bounded judgment. Jev and GLiNER supplied distributions. ReAnchor changed the local selection policy. Python remained responsible for what happened next.
+
+That is the same boundary I have been circling throughout this series:
+
+> Let the model make the small uncertain judgment. Let code own the system.
+
+DSPy 3.4 gives that boundary a programming model. Jev fits it naturally. ReAnchor adds a useful optimizer, provided I remember that it optimizes decisions—not the truthfulness of the probabilities themselves.
+
+# Sources and reproducibility
+
+- [DSPy 3.4.0 release notes](https://github.com/stanfordnlp/dspy/releases/tag/3.4.0)
+- [DSPy decision types and System One models](https://dspy.ai/current/api/experimental/DecisionTypes/)
+- [DSPy ReAnchor documentation](https://dspy.ai/current/api/experimental/ReAnchor/)
+- [TypeSafe Choice documentation](https://docs.typesafe.ai/primitives/choice)
+- [TypeSafe confidence documentation](https://docs.typesafe.ai/confidence)
+- [GLiNER2.5-Decide model card](https://huggingface.co/fastino/GLiNER2.5-Decide)
+- [Classifier benchmark repository](https://github.com/manojlds/classifier-bench) — the DSPy/Jev and ReAnchor additions are currently in the accompanying worktree and will land with the next repository update

@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" role="img" aria-labelledby="title desc">
+  <title id="title">Jev at the branches of a deterministic state machine</title>
+  <desc id="desc">Observed facts enter a state machine. At a bounded decision branch Jev chooses among enabled transitions, policy approves an action, and an observed outcome returns to the machine.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="0.55" stop-color="#0b1727"/>
+      <stop offset="1" stop-color="#151126"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="53%" cy="43%" r="44%">
+      <stop offset="0" stop-color="#24d8ef" stop-opacity=".16"/>
+      <stop offset=".55" stop-color="#e551ba" stop-opacity=".06"/>
+      <stop offset="1" stop-color="#07111f" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#8ca1bd" stroke-opacity=".055"/>
+    </pattern>
+    <filter id="cyanGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="pinkGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="blueArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0l10 5-10 5z" fill="#31c9ec"/>
+    </marker>
+    <marker id="pinkArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0l10 5-10 5z" fill="#e551ba"/>
+    </marker>
+    <marker id="greenArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0l10 5-10 5z" fill="#5eeab0"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="760" fill="url(#bg)"/>
+  <rect width="1400" height="760" fill="url(#glow)"/>
+  <rect width="1400" height="760" fill="url(#grid)"/>
+
+  <g font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif">
+    <text x="70" y="78" fill="#f4f7fb" font-size="36" font-weight="750" letter-spacing="-.5">JEV AT THE BRANCHES</text>
+    <text x="72" y="112" fill="#90a5c2" font-size="17" letter-spacing="2.4">THE STATE MACHINE OWNS THE LOOP</text>
+
+    <!-- observed state -->
+    <g transform="translate(70 185)">
+      <rect width="285" height="330" rx="22" fill="#101d31" stroke="#315074" stroke-width="2"/>
+      <circle cx="28" cy="30" r="6" fill="#ff647c"/><circle cx="48" cy="30" r="6" fill="#ffb347"/><circle cx="68" cy="30" r="6" fill="#5eeab0"/>
+      <text x="28" y="78" fill="#31c9ec" font-size="15" font-weight="750" letter-spacing="2">OBSERVED FACTS</text>
+      <g transform="translate(28 110)">
+        <text fill="#8fa5c0" font-size="13">ERROR RATE</text>
+        <text y="30" fill="#f4f7fb" font-size="23" font-weight="700">1.2%</text>
+        <rect x="105" y="12" width="120" height="8" rx="4" fill="#243b52"/><rect x="105" y="12" width="53" height="8" rx="4" fill="#31c9ec"/>
+      </g>
+      <g transform="translate(28 184)">
+        <text fill="#8fa5c0" font-size="13">P95 LATENCY</text>
+        <text y="30" fill="#f4f7fb" font-size="23" font-weight="700">190 ms</text>
+        <rect x="105" y="12" width="120" height="8" rx="4" fill="#243b52"/><rect x="105" y="12" width="69" height="8" rx="4" fill="#31c9ec"/>
+      </g>
+      <g transform="translate(28 257)">
+        <rect width="104" height="38" rx="19" fill="#162b43" stroke="#315074"/>
+        <text x="52" y="24" fill="#a9bdd6" font-size="13" text-anchor="middle">trend: stable</text>
+        <rect x="116" width="112" height="38" rx="19" fill="#162b43" stroke="#315074"/>
+        <text x="172" y="24" fill="#a9bdd6" font-size="13" text-anchor="middle">quality: high</text>
+      </g>
+    </g>
+
+    <!-- state machine -->
+    <g transform="translate(443 164)">
+      <text x="187" y="0" fill="#90a5c2" font-size="14" font-weight="700" letter-spacing="2" text-anchor="middle">DETERMINISTIC STATE MACHINE</text>
+      <path d="M90 92H176" stroke="#31c9ec" stroke-width="4" marker-end="url(#blueArrow)"/>
+      <path d="M283 92C333 92 337 45 386 45" fill="none" stroke="#e551ba" stroke-width="3" marker-end="url(#pinkArrow)"/>
+      <path d="M283 92H386" fill="none" stroke="#e551ba" stroke-width="3" marker-end="url(#pinkArrow)"/>
+      <path d="M283 92C333 92 337 139 386 139" fill="none" stroke="#e551ba" stroke-width="3" marker-end="url(#pinkArrow)"/>
+      <g transform="translate(0 65)"><rect width="110" height="54" rx="14" fill="#101d31" stroke="#315074" stroke-width="2"/><text x="55" y="33" fill="#d8e3f0" font-size="14" font-weight="650" text-anchor="middle">OBSERVING</text></g>
+      <g transform="translate(176 62)" filter="url(#pinkGlow)"><rect width="112" height="60" rx="15" fill="#291a35" stroke="#e551ba" stroke-width="4"/><text x="56" y="36" fill="#fff" font-size="14" font-weight="750" text-anchor="middle">ASSESSING</text></g>
+      <g transform="translate(394 19)"><rect width="124" height="52" rx="14" fill="#101d31" stroke="#8e3d7c" stroke-width="2"/><text x="62" y="31" fill="#d8e3f0" font-size="13" font-weight="650" text-anchor="middle">PROMOTE</text></g>
+      <g transform="translate(394 66)"><rect width="124" height="52" rx="14" fill="#101d31" stroke="#8e3d7c" stroke-width="2"/><text x="62" y="31" fill="#d8e3f0" font-size="13" font-weight="650" text-anchor="middle">HOLD</text></g>
+      <g transform="translate(394 113)"><rect width="124" height="52" rx="14" fill="#101d31" stroke="#8e3d7c" stroke-width="2"/><text x="62" y="31" fill="#d8e3f0" font-size="13" font-weight="650" text-anchor="middle">ROLLBACK</text></g>
+      <text x="232" y="161" fill="#31c9ec" font-size="12" text-anchor="middle">system fact</text>
+      <text x="341" y="180" fill="#e98ace" font-size="12" text-anchor="middle">enabled decisions only</text>
+    </g>
+
+    <!-- Jev choice -->
+    <g transform="translate(1015 174)">
+      <rect width="315" height="350" rx="22" fill="#101d2b" stroke="#39b98a" stroke-width="2"/>
+      <text x="28" y="48" fill="#5eeab0" font-size="16" font-weight="800" letter-spacing="2">JEV · CHOICE</text>
+      <text x="287" y="48" fill="#91a6bf" font-size="13" text-anchor="end">bounded judgment</text>
+      <g transform="translate(28 87)">
+        <text fill="#f4f7fb" font-size="14" font-weight="700">PROMOTE</text><text x="258" fill="#5eeab0" font-size="14" font-weight="700" text-anchor="end">68%</text>
+        <rect y="14" width="258" height="11" rx="5.5" fill="#213b4b"/><rect y="14" width="175" height="11" rx="5.5" fill="#5eeab0"/>
+      </g>
+      <g transform="translate(28 151)">
+        <text fill="#c0cede" font-size="14">HOLD</text><text x="258" fill="#91a6bf" font-size="14" text-anchor="end">21%</text>
+        <rect y="14" width="258" height="11" rx="5.5" fill="#213b4b"/><rect y="14" width="54" height="11" rx="5.5" fill="#4a8790"/>
+      </g>
+      <g transform="translate(28 215)">
+        <text fill="#c0cede" font-size="14">ROLLBACK</text><text x="258" fill="#91a6bf" font-size="14" text-anchor="end">11%</text>
+        <rect y="14" width="258" height="11" rx="5.5" fill="#213b4b"/><rect y="14" width="28" height="11" rx="5.5" fill="#4a8790"/>
+      </g>
+      <g transform="translate(28 278)">
+        <rect width="258" height="44" rx="12" fill="#142b31" stroke="#2d8a6b"/>
+        <circle cx="25" cy="22" r="8" fill="none" stroke="#5eeab0" stroke-width="3"/><path d="M21 22l3 3 6-8" fill="none" stroke="#5eeab0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="44" y="27" fill="#d9f8eb" font-size="14" font-weight="700">POLICY APPROVED</text>
+        <text x="238" y="27" fill="#5eeab0" font-size="13" text-anchor="end">0.68</text>
+      </g>
+    </g>
+
+    <!-- connections and outcome loop -->
+    <path d="M355 350C393 350 401 259 443 259" fill="none" stroke="#31c9ec" stroke-width="3" marker-end="url(#blueArrow)" filter="url(#cyanGlow)"/>
+    <path d="M961 256C985 256 989 300 1015 300" fill="none" stroke="#e551ba" stroke-width="4" marker-end="url(#pinkArrow)" filter="url(#pinkGlow)"/>
+    <text x="983" y="236" fill="#e98ace" font-size="12" text-anchor="middle">ask only here</text>
+
+    <g transform="translate(430 584)">
+      <rect width="540" height="92" rx="22" fill="#0f1c2e" stroke="#355070" stroke-width="2"/>
+      <g transform="translate(30 24)"><rect width="130" height="44" rx="12" fill="#182b41"/><text x="65" y="28" fill="#f4f7fb" font-size="13" font-weight="700" text-anchor="middle">ACTION</text></g>
+      <path d="M174 46H245" stroke="#5eeab0" stroke-width="3" marker-end="url(#greenArrow)"/>
+      <g transform="translate(260 24)"><rect width="166" height="44" rx="12" fill="#162b34" stroke="#2f8c70"/><text x="83" y="28" fill="#d9f8eb" font-size="13" font-weight="700" text-anchor="middle">OBSERVED OUTCOME</text></g>
+      <path d="M440 46H493" stroke="#31c9ec" stroke-width="3" marker-end="url(#blueArrow)"/>
+    </g>
+    <path d="M1015 476C952 548 905 584 875 607" fill="none" stroke="#5eeab0" stroke-width="3" marker-end="url(#greenArrow)"/>
+    <path d="M430 631C355 631 324 559 330 515" fill="none" stroke="#31c9ec" stroke-width="3" stroke-dasharray="8 7" marker-end="url(#blueArrow)"/>
+
+    <g transform="translate(69 694)">
+      <rect width="1262" height="2" fill="#253950"/>
+      <text x="0" y="37" fill="#31c9ec" font-size="14" font-weight="750" letter-spacing="1.2">FACTS IN</text>
+      <text x="112" y="37" fill="#607894" font-size="14">·</text>
+      <text x="132" y="37" fill="#e551ba" font-size="14" font-weight="750" letter-spacing="1.2">JUDGMENT AT THE BRANCH</text>
+      <text x="382" y="37" fill="#607894" font-size="14">·</text>
+      <text x="402" y="37" fill="#5eeab0" font-size="14" font-weight="750" letter-spacing="1.2">CODE RETAINS AUTHORITY</text>
+    </g>
+  </g>
+</svg>

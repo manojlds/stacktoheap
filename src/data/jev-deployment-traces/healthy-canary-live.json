@@ -1,0 +1,2352 @@
+{
+  "schemaVersion": 1,
+  "kind": "jev-deployment-simulation",
+  "capturedAt": "2026-09-20T21:15:07.451Z",
+  "scenario": {
+    "id": "healthy-canary",
+    "seed": 42
+  },
+  "evaluator": {
+    "kind": "jev",
+    "model": "jev-1.13.0"
+  },
+  "goal": "Safely reach full deployment when evidence supports the canary, avoid unnecessary rollback, and escalate when automation lacks sufficient authority or evidence.",
+  "outcome": {
+    "status": "fully-deployed",
+    "finalState": "fullyDeployed",
+    "transitionCount": 13,
+    "frameCount": 13
+  },
+  "frames": [
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "advanced",
+      "before": {
+        "value": "observing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 0,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 0,
+          "canaryRequests": 0,
+          "baselineErrorRate": 0,
+          "canaryErrorRate": 0,
+          "baselineP95LatencyMs": 0,
+          "canaryP95LatencyMs": 0,
+          "trend": "stable",
+          "dataQuality": "low",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [],
+          "lastActionError": null
+        },
+        "steps": 0,
+        "history": []
+      },
+      "after": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 1,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 10036,
+          "canaryRequests": 2990,
+          "baselineErrorRate": 0.0088,
+          "canaryErrorRate": 0.01007,
+          "baselineP95LatencyMs": 178.5,
+          "canaryP95LatencyMs": 186,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [],
+          "lastActionError": null
+        },
+        "steps": 1,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "OBSERVATION_READY",
+      "transition": {
+        "source": "observing",
+        "event": "OBSERVATION_READY",
+        "target": "assessing",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "decision",
+      "status": "advanced",
+      "before": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 1,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 10036,
+          "canaryRequests": 2990,
+          "baselineErrorRate": 0.0088,
+          "canaryErrorRate": 0.01007,
+          "baselineP95LatencyMs": 178.5,
+          "canaryP95LatencyMs": 186,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [],
+          "lastActionError": null
+        },
+        "steps": 1,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "after": {
+        "value": "holding",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 1,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 10036,
+          "canaryRequests": 2990,
+          "baselineErrorRate": 0.0088,
+          "canaryErrorRate": 0.01007,
+          "baselineP95LatencyMs": 178.5,
+          "canaryP95LatencyMs": 186,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD"
+          ],
+          "lastActionError": null
+        },
+        "steps": 2,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          }
+        ]
+      },
+      "enabledChoices": [
+        {
+          "event": "PROMOTE",
+          "target": "shiftingTraffic",
+          "description": "Increase canary traffic because the evidence supports the new version. Do not choose this when evidence is sparse or a change freeze is active."
+        },
+        {
+          "event": "HOLD",
+          "target": "holding",
+          "description": "Keep the current traffic percentage and gather another observation window because the evidence may be noisy or incomplete."
+        },
+        {
+          "event": "ROLLBACK",
+          "target": "rollingBack",
+          "description": "Return traffic to the stable version because the evidence indicates a canary regression. High-risk rollbacks require human review instead."
+        },
+        {
+          "event": "ESCALATE",
+          "target": "humanReview",
+          "description": "Pause automation and request human review because evidence conflicts, legal automated actions are exhausted, or the remaining action risk is too high."
+        }
+      ],
+      "selection": {
+        "event": "HOLD",
+        "confidence": 0.56,
+        "probabilities": {
+          "ESCALATE": 0.03,
+          "PROMOTE": 0.3,
+          "ROLLBACK": 0.01,
+          "HOLD": 0.66
+        },
+        "metadata": {
+          "model": "jev-1.13.0",
+          "usage": {
+            "inputTokens": 772,
+            "outputTokens": 52
+          },
+          "latencyMs": 302.6
+        }
+      },
+      "selectedBy": "jev",
+      "policy": {
+        "minConfidence": 0.5,
+        "minMargin": 0.05,
+        "observedConfidence": 0.56,
+        "observedMargin": 0.36000000000000004,
+        "accepted": true
+      },
+      "transition": {
+        "source": "assessing",
+        "event": "HOLD",
+        "target": "holding",
+        "control": "decision",
+        "selectedBy": "jev",
+        "confidence": 0.56
+      },
+      "action": {
+        "id": "deployment.scheduleObservation",
+        "status": "completed"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "advanced",
+      "before": {
+        "value": "holding",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 1,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 10036,
+          "canaryRequests": 2990,
+          "baselineErrorRate": 0.0088,
+          "canaryErrorRate": 0.01007,
+          "baselineP95LatencyMs": 178.5,
+          "canaryP95LatencyMs": 186,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD"
+          ],
+          "lastActionError": null
+        },
+        "steps": 2,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          }
+        ]
+      },
+      "after": {
+        "value": "observing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 1,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 10036,
+          "canaryRequests": 2990,
+          "baselineErrorRate": 0.0088,
+          "canaryErrorRate": 0.01007,
+          "baselineP95LatencyMs": 178.5,
+          "canaryP95LatencyMs": 186,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD"
+          ],
+          "lastActionError": null
+        },
+        "steps": 3,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "OBSERVATION_WINDOW_ELAPSED",
+      "transition": {
+        "source": "holding",
+        "event": "OBSERVATION_WINDOW_ELAPSED",
+        "target": "observing",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "advanced",
+      "before": {
+        "value": "observing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 1,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 10036,
+          "canaryRequests": 2990,
+          "baselineErrorRate": 0.0088,
+          "canaryErrorRate": 0.01007,
+          "baselineP95LatencyMs": 178.5,
+          "canaryP95LatencyMs": 186,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD"
+          ],
+          "lastActionError": null
+        },
+        "steps": 3,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "after": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 2,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 11960,
+          "canaryRequests": 7859,
+          "baselineErrorRate": 0.01003,
+          "canaryErrorRate": 0.01111,
+          "baselineP95LatencyMs": 180.6,
+          "canaryP95LatencyMs": 183.7,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD"
+          ],
+          "lastActionError": null
+        },
+        "steps": 4,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "OBSERVATION_READY",
+      "transition": {
+        "source": "observing",
+        "event": "OBSERVATION_READY",
+        "target": "assessing",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "decision",
+      "status": "advanced",
+      "before": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 5,
+          "observationCount": 2,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 11960,
+          "canaryRequests": 7859,
+          "baselineErrorRate": 0.01003,
+          "canaryErrorRate": 0.01111,
+          "baselineP95LatencyMs": 180.6,
+          "canaryP95LatencyMs": 183.7,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD"
+          ],
+          "lastActionError": null
+        },
+        "steps": 4,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "after": {
+        "value": "shiftingTraffic",
+        "context": {
+          "trafficPercent": 20,
+          "observationCount": 2,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 11960,
+          "canaryRequests": 7859,
+          "baselineErrorRate": 0.01003,
+          "canaryErrorRate": 0.01111,
+          "baselineP95LatencyMs": 180.6,
+          "canaryP95LatencyMs": 183.7,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 5,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          }
+        ]
+      },
+      "enabledChoices": [
+        {
+          "event": "PROMOTE",
+          "target": "shiftingTraffic",
+          "description": "Increase canary traffic because the evidence supports the new version. Do not choose this when evidence is sparse or a change freeze is active."
+        },
+        {
+          "event": "HOLD",
+          "target": "holding",
+          "description": "Keep the current traffic percentage and gather another observation window because the evidence may be noisy or incomplete."
+        },
+        {
+          "event": "ROLLBACK",
+          "target": "rollingBack",
+          "description": "Return traffic to the stable version because the evidence indicates a canary regression. High-risk rollbacks require human review instead."
+        },
+        {
+          "event": "ESCALATE",
+          "target": "humanReview",
+          "description": "Pause automation and request human review because evidence conflicts, legal automated actions are exhausted, or the remaining action risk is too high."
+        }
+      ],
+      "selection": {
+        "event": "PROMOTE",
+        "confidence": 0.5,
+        "probabilities": {
+          "PROMOTE": 0.63,
+          "ESCALATE": 0.04,
+          "ROLLBACK": 0,
+          "HOLD": 0.33
+        },
+        "metadata": {
+          "model": "jev-1.13.0",
+          "usage": {
+            "inputTokens": 943,
+            "outputTokens": 52
+          },
+          "latencyMs": 286.9
+        }
+      },
+      "selectedBy": "jev",
+      "policy": {
+        "minConfidence": 0.5,
+        "minMargin": 0.05,
+        "observedConfidence": 0.5,
+        "observedMargin": 0.3,
+        "accepted": true
+      },
+      "transition": {
+        "source": "assessing",
+        "event": "PROMOTE",
+        "target": "shiftingTraffic",
+        "control": "decision",
+        "selectedBy": "jev",
+        "confidence": 0.5
+      },
+      "action": {
+        "id": "deployment.shiftTraffic",
+        "status": "completed",
+        "emittedSystemEvent": "TRAFFIC_SHIFT_COMPLETED"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "advanced",
+      "before": {
+        "value": "shiftingTraffic",
+        "context": {
+          "trafficPercent": 20,
+          "observationCount": 2,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 11960,
+          "canaryRequests": 7859,
+          "baselineErrorRate": 0.01003,
+          "canaryErrorRate": 0.01111,
+          "baselineP95LatencyMs": 180.6,
+          "canaryP95LatencyMs": 183.7,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 5,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          }
+        ]
+      },
+      "after": {
+        "value": "observing",
+        "context": {
+          "trafficPercent": 20,
+          "observationCount": 2,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 11960,
+          "canaryRequests": 7859,
+          "baselineErrorRate": 0.01003,
+          "canaryErrorRate": 0.01111,
+          "baselineP95LatencyMs": 180.6,
+          "canaryP95LatencyMs": 183.7,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 6,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "TRAFFIC_SHIFT_COMPLETED",
+      "transition": {
+        "source": "shiftingTraffic",
+        "event": "TRAFFIC_SHIFT_COMPLETED",
+        "target": "observing",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "advanced",
+      "before": {
+        "value": "observing",
+        "context": {
+          "trafficPercent": 20,
+          "observationCount": 2,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 11960,
+          "canaryRequests": 7859,
+          "baselineErrorRate": 0.01003,
+          "canaryErrorRate": 0.01111,
+          "baselineP95LatencyMs": 180.6,
+          "canaryP95LatencyMs": 183.7,
+          "trend": "stable",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 6,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "after": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 20,
+          "observationCount": 3,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14209,
+          "canaryRequests": 17723,
+          "baselineErrorRate": 0.00999,
+          "canaryErrorRate": 0.00926,
+          "baselineP95LatencyMs": 178.8,
+          "canaryP95LatencyMs": 181.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 7,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "OBSERVATION_READY",
+      "transition": {
+        "source": "observing",
+        "event": "OBSERVATION_READY",
+        "target": "assessing",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "decision",
+      "status": "advanced",
+      "before": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 20,
+          "observationCount": 3,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14209,
+          "canaryRequests": 17723,
+          "baselineErrorRate": 0.00999,
+          "canaryErrorRate": 0.00926,
+          "baselineP95LatencyMs": 178.8,
+          "canaryP95LatencyMs": 181.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 7,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "after": {
+        "value": "shiftingTraffic",
+        "context": {
+          "trafficPercent": 50,
+          "observationCount": 3,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14209,
+          "canaryRequests": 17723,
+          "baselineErrorRate": 0.00999,
+          "canaryErrorRate": 0.00926,
+          "baselineP95LatencyMs": 178.8,
+          "canaryP95LatencyMs": 181.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 8,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.82
+          }
+        ]
+      },
+      "enabledChoices": [
+        {
+          "event": "PROMOTE",
+          "target": "shiftingTraffic",
+          "description": "Increase canary traffic because the evidence supports the new version. Do not choose this when evidence is sparse or a change freeze is active."
+        },
+        {
+          "event": "HOLD",
+          "target": "holding",
+          "description": "Keep the current traffic percentage and gather another observation window because the evidence may be noisy or incomplete."
+        },
+        {
+          "event": "ROLLBACK",
+          "target": "rollingBack",
+          "description": "Return traffic to the stable version because the evidence indicates a canary regression. High-risk rollbacks require human review instead."
+        },
+        {
+          "event": "ESCALATE",
+          "target": "humanReview",
+          "description": "Pause automation and request human review because evidence conflicts, legal automated actions are exhausted, or the remaining action risk is too high."
+        }
+      ],
+      "selection": {
+        "event": "PROMOTE",
+        "confidence": 0.82,
+        "probabilities": {
+          "ESCALATE": 0.03,
+          "HOLD": 0.11,
+          "PROMOTE": 0.86,
+          "ROLLBACK": 0
+        },
+        "metadata": {
+          "model": "jev-1.13.0",
+          "usage": {
+            "inputTokens": 1122,
+            "outputTokens": 52
+          },
+          "latencyMs": 278.7
+        }
+      },
+      "selectedBy": "jev",
+      "policy": {
+        "minConfidence": 0.5,
+        "minMargin": 0.05,
+        "observedConfidence": 0.82,
+        "observedMargin": 0.75,
+        "accepted": true
+      },
+      "transition": {
+        "source": "assessing",
+        "event": "PROMOTE",
+        "target": "shiftingTraffic",
+        "control": "decision",
+        "selectedBy": "jev",
+        "confidence": 0.82
+      },
+      "action": {
+        "id": "deployment.shiftTraffic",
+        "status": "completed",
+        "emittedSystemEvent": "TRAFFIC_SHIFT_COMPLETED"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "advanced",
+      "before": {
+        "value": "shiftingTraffic",
+        "context": {
+          "trafficPercent": 50,
+          "observationCount": 3,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14209,
+          "canaryRequests": 17723,
+          "baselineErrorRate": 0.00999,
+          "canaryErrorRate": 0.00926,
+          "baselineP95LatencyMs": 178.8,
+          "canaryP95LatencyMs": 181.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 8,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.82
+          }
+        ]
+      },
+      "after": {
+        "value": "observing",
+        "context": {
+          "trafficPercent": 50,
+          "observationCount": 3,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14209,
+          "canaryRequests": 17723,
+          "baselineErrorRate": 0.00999,
+          "canaryErrorRate": 0.00926,
+          "baselineP95LatencyMs": 178.8,
+          "canaryP95LatencyMs": 181.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 9,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.82
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "TRAFFIC_SHIFT_COMPLETED",
+      "transition": {
+        "source": "shiftingTraffic",
+        "event": "TRAFFIC_SHIFT_COMPLETED",
+        "target": "observing",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "advanced",
+      "before": {
+        "value": "observing",
+        "context": {
+          "trafficPercent": 50,
+          "observationCount": 3,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14209,
+          "canaryRequests": 17723,
+          "baselineErrorRate": 0.00999,
+          "canaryErrorRate": 0.00926,
+          "baselineP95LatencyMs": 178.8,
+          "canaryP95LatencyMs": 181.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 9,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.82
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "after": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 50,
+          "observationCount": 4,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14107,
+          "canaryRequests": 17872,
+          "baselineErrorRate": 0.00975,
+          "canaryErrorRate": 0.00883,
+          "baselineP95LatencyMs": 181.8,
+          "canaryP95LatencyMs": 180.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 10,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.82
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "OBSERVATION_READY",
+      "transition": {
+        "source": "observing",
+        "event": "OBSERVATION_READY",
+        "target": "assessing",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "decision",
+      "status": "advanced",
+      "before": {
+        "value": "assessing",
+        "context": {
+          "trafficPercent": 50,
+          "observationCount": 4,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14107,
+          "canaryRequests": 17872,
+          "baselineErrorRate": 0.00975,
+          "canaryErrorRate": 0.00883,
+          "baselineP95LatencyMs": 181.8,
+          "canaryP95LatencyMs": 180.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 10,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.82
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "after": {
+        "value": "shiftingTraffic",
+        "context": {
+          "trafficPercent": 100,
+          "observationCount": 4,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14107,
+          "canaryRequests": 17872,
+          "baselineErrorRate": 0.00975,
+          "canaryErrorRate": 0.00883,
+          "baselineP95LatencyMs": 181.8,
+          "canaryP95LatencyMs": 180.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE",
+            "PROMOTE",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 11,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.82
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.87
+          }
+        ]
+      },
+      "enabledChoices": [
+        {
+          "event": "PROMOTE",
+          "target": "shiftingTraffic",
+          "description": "Increase canary traffic because the evidence supports the new version. Do not choose this when evidence is sparse or a change freeze is active."
+        },
+        {
+          "event": "HOLD",
+          "target": "holding",
+          "description": "Keep the current traffic percentage and gather another observation window because the evidence may be noisy or incomplete."
+        },
+        {
+          "event": "ROLLBACK",
+          "target": "rollingBack",
+          "description": "Return traffic to the stable version because the evidence indicates a canary regression. High-risk rollbacks require human review instead."
+        },
+        {
+          "event": "ESCALATE",
+          "target": "humanReview",
+          "description": "Pause automation and request human review because evidence conflicts, legal automated actions are exhausted, or the remaining action risk is too high."
+        }
+      ],
+      "selection": {
+        "event": "PROMOTE",
+        "confidence": 0.87,
+        "probabilities": {
+          "ESCALATE": 0.05,
+          "ROLLBACK": 0,
+          "HOLD": 0.05,
+          "PROMOTE": 0.9
+        },
+        "metadata": {
+          "model": "jev-1.13.0",
+          "usage": {
+            "inputTokens": 1298,
+            "outputTokens": 52
+          },
+          "latencyMs": 260
+        }
+      },
+      "selectedBy": "jev",
+      "policy": {
+        "minConfidence": 0.5,
+        "minMargin": 0.05,
+        "observedConfidence": 0.87,
+        "observedMargin": 0.85,
+        "accepted": true
+      },
+      "transition": {
+        "source": "assessing",
+        "event": "PROMOTE",
+        "target": "shiftingTraffic",
+        "control": "decision",
+        "selectedBy": "jev",
+        "confidence": 0.87
+      },
+      "action": {
+        "id": "deployment.shiftTraffic",
+        "status": "completed",
+        "emittedSystemEvent": "TRAFFIC_SHIFT_COMPLETED"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "advanced",
+      "before": {
+        "value": "shiftingTraffic",
+        "context": {
+          "trafficPercent": 100,
+          "observationCount": 4,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14107,
+          "canaryRequests": 17872,
+          "baselineErrorRate": 0.00975,
+          "canaryErrorRate": 0.00883,
+          "baselineP95LatencyMs": 181.8,
+          "canaryP95LatencyMs": 180.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE",
+            "PROMOTE",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 11,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.82
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.87
+          }
+        ]
+      },
+      "after": {
+        "value": "observing",
+        "context": {
+          "trafficPercent": 100,
+          "observationCount": 4,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14107,
+          "canaryRequests": 17872,
+          "baselineErrorRate": 0.00975,
+          "canaryErrorRate": 0.00883,
+          "baselineP95LatencyMs": 181.8,
+          "canaryP95LatencyMs": 180.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE",
+            "PROMOTE",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 12,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.82
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.87
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "TRAFFIC_SHIFT_COMPLETED",
+      "transition": {
+        "source": "shiftingTraffic",
+        "event": "TRAFFIC_SHIFT_COMPLETED",
+        "target": "observing",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "system",
+      "status": "final",
+      "before": {
+        "value": "observing",
+        "context": {
+          "trafficPercent": 100,
+          "observationCount": 4,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14107,
+          "canaryRequests": 17872,
+          "baselineErrorRate": 0.00975,
+          "canaryErrorRate": 0.00883,
+          "baselineP95LatencyMs": 181.8,
+          "canaryP95LatencyMs": 180.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE",
+            "PROMOTE",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 12,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.82
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.87
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "after": {
+        "value": "fullyDeployed",
+        "context": {
+          "trafficPercent": 100,
+          "observationCount": 4,
+          "maxObservationWindows": 5,
+          "minCanaryRequests": 1000,
+          "baselineRequests": 14107,
+          "canaryRequests": 17872,
+          "baselineErrorRate": 0.00975,
+          "canaryErrorRate": 0.00883,
+          "baselineP95LatencyMs": 181.8,
+          "canaryP95LatencyMs": 180.2,
+          "trend": "improving",
+          "dataQuality": "high",
+          "rollbackRisk": "low",
+          "changeFreeze": false,
+          "previousDecisions": [
+            "HOLD",
+            "PROMOTE",
+            "PROMOTE",
+            "PROMOTE"
+          ],
+          "lastActionError": null
+        },
+        "steps": 13,
+        "history": [
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "HOLD",
+            "target": "holding",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.56
+          },
+          {
+            "source": "holding",
+            "event": "OBSERVATION_WINDOW_ELAPSED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.5
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.82
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "OBSERVATION_READY",
+            "target": "assessing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "assessing",
+            "event": "PROMOTE",
+            "target": "shiftingTraffic",
+            "control": "decision",
+            "selectedBy": "jev",
+            "confidence": 0.87
+          },
+          {
+            "source": "shiftingTraffic",
+            "event": "TRAFFIC_SHIFT_COMPLETED",
+            "target": "observing",
+            "control": "system",
+            "selectedBy": "system"
+          },
+          {
+            "source": "observing",
+            "event": "TARGET_REACHED",
+            "target": "fullyDeployed",
+            "control": "system",
+            "selectedBy": "system"
+          }
+        ]
+      },
+      "enabledChoices": [],
+      "systemEvent": "TARGET_REACHED",
+      "transition": {
+        "source": "observing",
+        "event": "TARGET_REACHED",
+        "target": "fullyDeployed",
+        "control": "system",
+        "selectedBy": "system"
+      }
+    }
+  ]
+}
