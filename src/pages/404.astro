@@ -1,8 +1,6 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Button from '@/components/Button.astro';
-
-Astro.response.status = 404;
 ---
 
 <BaseLayout title="Page not found" description="The page you requested could not be found.">
@@ -15,7 +13,7 @@ Astro.response.status = 404;
       </p>
       <div class="mt-2 flex flex-wrap gap-4">
         <Button href="/" size="lg">Go home</Button>
-        <Button href="/blog" variant="outline" size="lg">Read the blog</Button>
+        <Button href="/blog/" variant="outline" size="lg">Read the blog</Button>
       </div>
     </div>
   </div>
