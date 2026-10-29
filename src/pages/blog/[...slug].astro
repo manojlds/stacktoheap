@@ -1,14 +1,14 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import BlogPost from '@/layouts/BlogPost.astro';
 import SeriesNav from '@/components/SeriesNav.astro';
 
-function postUrl(post: { slug: string; data: { date: Date } }) {
+function postUrl(post: { id: string; data: { date: Date } }) {
   const { date } = post.data;
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  return `/blog/${year}/${month}/${day}/${post.slug}`;
+  return `/blog/${year}/${month}/${day}/${post.id}`;
 }
 
 export async function getStaticPaths() {
@@ -21,14 +21,14 @@ export async function getStaticPaths() {
     const day = String(date.getDate()).padStart(2, '0');
 
     return {
-      params: { slug: `${year}/${month}/${day}/${post.slug}` },
+      params: { slug: `${year}/${month}/${day}/${post.id}` },
       props: { post },
     };
   });
 }
 
 const { post } = Astro.props;
-const { Content } = await post.render();
+const { Content } = await render(post);
 const { title, excerpt, date, reading_time, categories, tags, hero_image, series } = post.data;
 
 let seriesParts: { part: number; title: string; url: string }[] = [];
