@@ -55,11 +55,11 @@ const canonicalURL = new URL(Astro.url.pathname, siteUrl);
 {tags && tags.map((tag) => <meta property="article:tag" content={tag} />)}
 
 <!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content={canonicalURL} />
-<meta property="twitter:title" content={fullTitle} />
-<meta property="twitter:description" content={metaDescription} />
-<meta property="twitter:image" content={metaImage} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:url" content={canonicalURL} />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={metaDescription} />
+<meta name="twitter:image" content={metaImage} />
 <meta name="twitter:site" content="@manojlds" />
 <meta name="twitter:creator" content="@manojlds" />
 
