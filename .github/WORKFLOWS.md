@@ -60,7 +60,7 @@ This document describes all the GitHub Actions workflows configured for this pro
 - Lists generated files
 
 #### 3. Lighthouse CI
-- Runs only on pull requests
+- Runs on pull requests and on pushes to `main`
 - Performs Lighthouse audits
 - Tests performance, accessibility, best practices, SEO
 - Uploads results as artifacts
