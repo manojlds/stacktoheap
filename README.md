@@ -77,14 +77,20 @@ comments: true
 Your content here...
 ```
 
-## 🚢 Deployment
+## Deploy
 
-The site automatically deploys to GitHub Pages when pushed to the `main` branch via GitHub Actions.
+The site is a static Astro build served as [Cloudflare Workers static assets](https://developers.cloudflare.com/workers/static-assets/). [`wrangler.jsonc`](./wrangler.jsonc) names the Worker `stacktoheap` and serves `./dist`, the output of `pnpm build`.
+
+```bash
+pnpm build
+npx wrangler deploy
+```
+
+`pnpm build` type-checks the project and writes the site to `./dist`. `wrangler deploy` uploads that directory. The custom domain is attached to the Worker in Cloudflare.
 
 ### GitHub Workflows
 
-- **Deploy** - Builds and deploys to GitHub Pages on push to `main`
-- **CI** - Runs type checking, linting, and build validation on PRs
+- **CI** - Runs type checking, linting, build validation, and Lighthouse on pull requests and pushes to `main`
 - **PR Preview** - Posts build statistics on pull requests
 - **PR Preview Deploy** - Automatic preview deployments for verified contributors (requires setup)
 - **Dependency Review** - Scans dependencies for security issues
