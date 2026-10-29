@@ -2,11 +2,10 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Card from '@/components/Card.astro';
 import { getCollection } from 'astro:content';
+import { comparePostsByDateDesc } from '@/lib/utils';
 
 const allPosts = await getCollection('blog', ({ data }) => !data.draft);
-const sortedPosts = allPosts.sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
-);
+const sortedPosts = allPosts.sort(comparePostsByDateDesc);
 
 // Group posts by year
 const postsByYear = sortedPosts.reduce((acc, post) => {
@@ -47,7 +46,7 @@ const years = Object.keys(postsByYear).sort((a, b) => Number(b) - Number(a));
               const year = date.getFullYear();
               const month = String(date.getMonth() + 1).padStart(2, '0');
               const day = String(date.getDate()).padStart(2, '0');
-              const slug = post.slug;
+              const slug = post.id;
               const url = `/blog/${year}/${month}/${day}/${slug}`;
 
               return (
