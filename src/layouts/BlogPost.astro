@@ -202,9 +202,44 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
       });
     });
 
-    document.querySelectorAll('.prose .mermaid').forEach((diagram) => {
+    const peleColorVars = [
+      '--pele-bg',
+      '--pele-fg',
+      '--pele-fg-on-light',
+      '--pele-fg-on-dark',
+      '--pele-muted',
+      '--pele-line',
+      '--pele-surface',
+      '--pele-surface-alt',
+      '--pele-border',
+      '--pele-accent',
+      '--pele-critical',
+      '--pele-error',
+    ];
+
+    const bakePeleTheme = (source: SVGSVGElement, target: SVGSVGElement) => {
+      const specified = getComputedStyle(source);
+      const probe = document.createElement('span');
+      probe.style.position = 'absolute';
+      probe.style.visibility = 'hidden';
+      document.body.append(probe);
+      for (const name of peleColorVars) {
+        const value = specified.getPropertyValue(name).trim();
+        if (!value) continue;
+        probe.style.color = value;
+        const resolved = getComputedStyle(probe).color;
+        if (resolved) target.style.setProperty(name, resolved);
+      }
+      for (const name of ['--pele-font', '--pele-font-mono', '--pele-radius']) {
+        const value = specified.getPropertyValue(name).trim();
+        if (value) target.style.setProperty(name, value);
+      }
+      probe.remove();
+    };
+
+    document.querySelectorAll('.prose .pele-diagram').forEach((diagram) => {
       const diagramElement = diagram as HTMLElement;
-      diagramElement.classList.add('mermaid-expandable');
+      diagramElement.classList.add('pele-diagram-expandable');
       diagramElement.tabIndex = 0;
       diagramElement.setAttribute('role', 'button');
       diagramElement.setAttribute('aria-label', 'Open interactive diagram viewer');
@@ -219,9 +254,10 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
           expandedSvg.setAttribute('width', String(viewBox.width));
           expandedSvg.setAttribute('height', String(viewBox.height));
         }
+        bakePeleTheme(svg, expandedSvg);
         const serialized = new XMLSerializer().serializeToString(expandedSvg);
         objectUrl = URL.createObjectURL(new Blob([serialized], { type: 'image/svg+xml' }));
-        openMedia(objectUrl, 'Expanded Mermaid diagram', 'Expanded diagram', '', 'diagram');
+        openMedia(objectUrl, 'Expanded diagram', 'Expanded diagram', '', 'diagram');
       };
       diagramElement.addEventListener('click', open);
       diagramElement.addEventListener('keydown', (event) => {

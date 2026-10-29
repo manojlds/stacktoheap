@@ -69,25 +69,51 @@
   text-decoration: var(--shiki-dark-text-decoration) !important;
 }
 
-/* Mermaid diagrams in prose: keep their natural proportions and expose the viewer affordance. */
-.prose .mermaid,
-.prose pre.mermaid {
-  position: relative;
-  overflow-x: auto;
+/* Pele diagrams follow the site theme through CSS variables. The SVG references
+   these names, so a `.dark` class change restyles the diagram without re-rendering.
+   `--pele-font` must match the fontFamily passed to render() in pele-diagrams.ts. */
+.pele {
+  --pele-bg: hsl(var(--background));
+  --pele-fg: hsl(var(--foreground));
+  --pele-fg-on-light: hsl(222.2 84% 4.9%);
+  --pele-fg-on-dark: hsl(210 40% 98%);
+  --pele-muted: hsl(var(--muted-foreground));
+  --pele-line: hsl(var(--foreground));
+  --pele-surface: hsl(var(--muted));
+  --pele-surface-alt: color-mix(in srgb, hsl(var(--foreground)) 8%, hsl(var(--background)));
+  --pele-border: hsl(var(--foreground) / 0.38);
+  --pele-accent: hsl(var(--foreground));
+  --pele-critical: hsl(var(--destructive));
+  --pele-error: hsl(var(--destructive));
+  --pele-font: "Inter var", system-ui, sans-serif;
+  --pele-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --pele-radius: 6px;
 }
 
-.prose .mermaid svg {
+.prose .pele-diagram {
+  position: relative;
+  overflow-x: auto;
+  margin-top: 1.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.prose .pele-diagram svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
   max-height: none;
   margin-inline: auto;
 }
 
-.prose .mermaid-expandable {
+.prose .pele-diagram-expandable {
   cursor: zoom-in;
   border-radius: 0.5rem;
   outline: none;
+  /* Keep the expand badge below the SVG so it does not cover the last row of nodes. */
+  padding-bottom: 1.75rem;
 }
 
-.prose .mermaid-expandable::after {
+.prose .pele-diagram-expandable::after {
   content: 'Expand diagram';
   position: absolute;
   right: 0.5rem;
@@ -107,13 +133,13 @@
   transition: opacity 150ms ease, transform 150ms ease;
 }
 
-.prose .mermaid-expandable:hover::after,
-.prose .mermaid-expandable:focus-visible::after {
+.prose .pele-diagram-expandable:hover::after,
+.prose .pele-diagram-expandable:focus-visible::after {
   opacity: 1;
   transform: translateY(0);
 }
 
-.prose .mermaid-expandable:focus-visible {
+.prose .pele-diagram-expandable:focus-visible {
   box-shadow: 0 0 0 3px hsl(var(--ring) / 0.35);
 }
 
@@ -217,7 +243,7 @@ body.media-lightbox-open {
   cursor: grabbing;
 }
 
-/* Mermaid SVGs inherit the page theme and need an opaque matching canvas.
+/* Diagram SVGs follow the page theme and need an opaque matching canvas.
    Keep the checkerboard only for ordinary images where transparency is useful. */
 #media-lightbox.media-lightbox-diagram #media-lightbox-viewport {
   background-color: hsl(var(--background));
@@ -242,7 +268,7 @@ body.media-lightbox-open {
 }
 
 @media (hover: none), (max-width: 640px) {
-  .prose .mermaid-expandable::after {
+  .prose .pele-diagram-expandable::after {
     opacity: 1;
     transform: none;
   }
@@ -267,7 +293,7 @@ body.media-lightbox-open {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .prose .mermaid-expandable::after {
+  .prose .pele-diagram-expandable::after {
     transition: none;
   }
 }
