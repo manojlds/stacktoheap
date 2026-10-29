@@ -88,25 +88,15 @@ npx wrangler deploy
 
 `pnpm build` type-checks the project and writes the site to `./dist`. `wrangler deploy` uploads that directory. The custom domain is attached to the Worker in Cloudflare.
 
+Cloudflare Workers Builds also builds and deploys automatically from Git; `wrangler deploy` is the manual path.
+
 ### GitHub Workflows
 
-- **CI** - Runs type checking, linting, build validation, and Lighthouse on pull requests and pushes to `main`
-- **PR Preview** - Posts build statistics on pull requests
-- **PR Preview Deploy** - Automatic preview deployments for verified contributors (requires setup)
-- **Dependency Review** - Scans dependencies for security issues
-- **CodeQL** - Automated security code scanning
+- [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — type check, build, and Lighthouse on pull requests and pushes to `main`
+- [`.github/workflows/codeql.yml`](./.github/workflows/codeql.yml) — CodeQL analysis on pull requests, pushes to `main`, and a weekly schedule
+- [`.github/workflows/dependency-review.yml`](./.github/workflows/dependency-review.yml) — dependency review on pull requests to `main`
 
 See [.github/WORKFLOWS.md](./.github/WORKFLOWS.md) for detailed workflow documentation.
-
-#### Setting Up PR Previews
-
-To enable automatic preview deployments for pull requests:
-1. Follow the setup guide in [.github/PREVIEW_SETUP.md](./.github/PREVIEW_SETUP.md)
-2. Choose a platform: Cloudflare Pages (recommended), Netlify, or Vercel
-3. Add required secrets to GitHub
-4. Preview URLs will be posted automatically on PRs from verified contributors
-
-**Security:** Only repository contributors can trigger preview deployments. PRs from forks are blocked for security.
 
 See [MIGRATION.md](./MIGRATION.md) for more details about the Jekyll to Astro migration.
 
