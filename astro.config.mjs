@@ -1,8 +1,8 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import { unified } from '@astrojs/markdown-remark';
-import mermaid from 'astro-mermaid';
+import { satteri } from '@astrojs/markdown-satteri';
+import { peleDiagrams } from './src/plugins/pele-diagrams.ts';
 
 // https://astro.build/config
 export default defineConfig({
@@ -10,20 +10,11 @@ export default defineConfig({
   // Astro 7 defaults this to 'jsx', which drops whitespace between inline
   // elements. `true` keeps the Astro 5 HTML-aware compression.
   compressHTML: true,
-  integrations: [
-    mermaid({
-      theme: 'neutral',
-      autoTheme: true,
-    }),
-    mdx(),
-    sitemap(),
-  ],
+  integrations: [mdx(), sitemap()],
   markdown: {
-    // astro-mermaid 2.1 registers remark/rehype plugins. Its Sätteri mdast
-    // plugin emits `{ type: 'html' }` nodes that @astrojs/mdx 8 cannot compile.
-    // TODO: Drop @astrojs/markdown-remark and unified() once astro-mermaid
-    // supports MDX 8. Mermaid is being replaced with pele.run next anyway.
-    processor: unified(),
+    processor: satteri({
+      hastPlugins: [peleDiagrams],
+    }),
     syntaxHighlight: {
       type: 'shiki',
       excludeLangs: ['mermaid'],
