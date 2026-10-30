@@ -112,6 +112,12 @@ async function copyRich(html: string, text: string): Promise<boolean> {
   }
 }
 
+/** The site's own origin, from the canonical link, so copies work outside the site. */
+function siteOrigin(): string {
+  const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
+  return canonical ? new URL(canonical).origin : location.origin;
+}
+
 export function init(postId: string) {
   const body = document.querySelector<HTMLElement>('[data-post-body]');
   if (!body) return;
@@ -122,9 +128,11 @@ export function init(postId: string) {
   status.setAttribute('role', 'status');
   const say = (text: string) => (status.textContent = text);
 
+  const origin = siteOrigin();
   const markdown = fetch(`/x-source/${postId}.json`)
     .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
-    .then((data: { markdown: string }) => data.markdown);
+    // Links to other posts are site-relative; give them the full address.
+    .then((data: { markdown: string }) => data.markdown.replace(/\]\(\//g, `](${origin}/`));
   // Markdown tables in source order, matching the rendered <table> elements.
   const tables = markdown.then((source) =>
     [...source.matchAll(/^(?:\|.*\|[ \t]*\n?)+/gm)].map((match) => match[0].trimEnd()),
@@ -154,6 +162,10 @@ export function init(postId: string) {
   function exportBody(): HTMLElement {
     const copy = body!.cloneNode(true) as HTMLElement;
     copy.querySelectorAll('[data-x-actions], [data-x-skip]').forEach((element) => element.remove());
+    copy.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((link) => {
+      const href = link.getAttribute('href')!;
+      if (href.startsWith('/')) link.setAttribute('href', origin + href);
+    });
     copy.querySelectorAll(IMAGES).forEach((element, index) => {
       const marker = document.createElement('p');
       marker.textContent = `[Insert image ${index + 1}]`;
