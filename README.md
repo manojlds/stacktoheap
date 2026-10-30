@@ -45,7 +45,7 @@ pnpm preview
 │   ├── pages/           # Routes and pages
 │   └── styles/          # Global styles
 ├── astro.config.mjs     # Astro configuration
-├── tailwind.config.mjs  # Tailwind configuration
+├── src/styles/global.css # Tailwind theme and global styles
 └── package.json
 ```
 
