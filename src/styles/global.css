@@ -541,3 +541,58 @@ body.media-lightbox-open {
     animation: none;
   }
 }
+
+/* X Article export tools, shown on posts with ?x (src/scripts/x-export.ts). */
+.x-button {
+  border: 1px solid hsl(var(--border));
+  border-radius: 999px;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.x-button:hover {
+  background: hsl(var(--muted));
+}
+.x-button-primary {
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+}
+.x-button-primary:hover {
+  background: hsl(var(--foreground) / 0.85);
+}
+.x-toolbar {
+  position: sticky;
+  /* Below the sticky site header (h-16). */
+  top: 4rem;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+}
+.x-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+/* Diagrams use the light palette, so the PNG matches what is on screen. */
+.x-export .prose .pele {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --destructive: 0 84.2% 60.2%;
+}
+.x-export .prose .pele-diagram svg {
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}

@@ -9,9 +9,11 @@ interface Props {
   categories?: string[];
   tags?: string[];
   hero_image?: string;
+  /** Content collection id, used by the ?x export tools. */
+  id: string;
 }
 
-const { title, excerpt, date, reading_time, categories = [], tags = [], hero_image } = Astro.props;
+const { title, excerpt, date, reading_time, categories = [], tags = [], hero_image, id } = Astro.props;
 
 const formattedDate = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
@@ -61,7 +63,7 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
         </div>
       </div>
       {hero_image && (
-        <div class="blog-image my-8">
+        <div class="blog-image my-8" data-post-cover>
           <img
             src={hero_image}
             alt={title}
@@ -71,7 +73,7 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
         </div>
       )}
       <hr class="my-8" />
-      <div class="prose prose-lg dark:prose-invert max-w-none prose-img:max-h-[400px] prose-img:w-auto prose-img:mx-auto prose-img:cursor-zoom-in prose-img:rounded-lg prose-img:border prose-img:border-border">
+      <div data-post-body data-post-id={id} class="prose prose-lg dark:prose-invert max-w-none prose-img:max-h-[400px] prose-img:w-auto prose-img:mx-auto prose-img:cursor-zoom-in prose-img:rounded-lg prose-img:border prose-img:border-border">
         <slot />
       </div>
 
@@ -270,12 +272,19 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
 
     // Step through `%% pele: play` sequence diagrams while they are on screen.
     // Hover or focus shows every step so the whole diagram can be read.
+    // ?x turns on the X Article export tools, which want the diagrams shown whole.
+    const exporting = new URLSearchParams(location.search).has('x');
+    if (exporting) {
+      const postId = document.querySelector<HTMLElement>('[data-post-body]')?.dataset.postId;
+      if (postId) import('@/scripts/x-export').then(({ init }) => init(postId));
+    }
+
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const STEP_MS = 1100;
     const HOLD_MS = 3000;
     document.querySelectorAll<HTMLElement>('.prose .pele-play').forEach((diagram) => {
       const total = Number(diagram.dataset.peleSteps);
-      if (reduceMotion || !total) return;
+      if (reduceMotion || exporting || !total) return;
       const steps = [...diagram.querySelectorAll<SVGGElement>('.pele-step')];
       let at = -1;
       let timer = 0;

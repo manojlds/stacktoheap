@@ -14,8 +14,7 @@ export default defineConfig({
   // Astro 7 defaults this to 'jsx', which drops whitespace between inline
   // elements. `true` keeps the Astro 5 HTML-aware compression.
   compressHTML: true,
-  // /x/ pages are X Article exports, not part of the site.
-  integrations: [mdx(), sitemap({ filter: (page) => !page.includes('/x/') })],
+  integrations: [mdx(), sitemap()],
   markdown: {
     processor: satteri({
       hastPlugins: [peleDiagrams],

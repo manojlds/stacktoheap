@@ -53,6 +53,7 @@ if (series) {
   categories={categories}
   tags={tags}
   hero_image={hero_image}
+  id={post.id}
 >
   {series && seriesParts.length > 1 && (
     <SeriesNav name={series.name} currentPart={series.part} parts={seriesParts} />
