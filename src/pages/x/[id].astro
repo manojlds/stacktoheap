@@ -1,24 +1,56 @@
 ---
-import { getCollection, getEntry, render } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 
-// X Article export: an unlinked, noindex page per draft in src/content/x/.
-// It copies the article as rich text and each diagram or cover as a PNG,
-// which X's editor accepts and a sandboxed preview cannot provide.
+// X Article export: the blog post itself, plus buttons to copy it as rich text
+// or Markdown and each diagram, image or cover as a PNG, which X's editor
+// accepts and a sandboxed preview cannot provide. It adds no content of its own.
 // Built only when X_EXPORT=true (set in the gitignored .env), so the deployed
 // site never has these pages.
 export async function getStaticPaths() {
   if (import.meta.env.X_EXPORT !== 'true') return [];
-  const drafts = await getCollection('x');
-  return drafts.map((draft) => ({ params: { id: draft.id }, props: { draft } }));
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
 }
 
-const { draft } = Astro.props;
-const { Content } = await render(draft);
-const post = await getEntry('blog', draft.id);
-const title = draft.data.title ?? post?.data.title ?? draft.id;
-const cover = draft.data.cover ?? post?.data.hero_image;
+/**
+ * The post's Markdown as X should receive it: diagrams and images become
+ * `[Insert image n]`, numbered like the rendered page, and MDX-only lines
+ * (imports, layout wrappers) are dropped.
+ */
+function exportMarkdown(source: string): string {
+  const out: string[] = [];
+  let fence: 'code' | 'mermaid' | undefined;
+  let image = 0;
+  for (const line of source.split('\n')) {
+    if (line.startsWith('```')) {
+      if (!fence) {
+        fence = line.trim() === '```mermaid' ? 'mermaid' : 'code';
+        if (fence === 'code') out.push(line);
+      } else {
+        if (fence === 'mermaid') out.push(`[Insert image ${++image}]`);
+        else out.push(line);
+        fence = undefined;
+      }
+      continue;
+    }
+    if (fence === 'mermaid') continue;
+    if (fence === 'code') {
+      out.push(line);
+      continue;
+    }
+    if (/^import\s.+\sfrom\s/.test(line) || /^<\/?div\b[^>]*>\s*$/.test(line)) continue;
+    out.push(line.replace(/!\[[^\]]*\]\([^)]*\)/g, () => `[Insert image ${++image}]`));
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const { title, hero_image: cover } = post.data;
+const markdown = exportMarkdown(post.body ?? '');
 ---
+
 
 <BaseLayout title={`X article: ${title}`} noindex>
   <div class="container py-8 md:py-12">
@@ -54,7 +86,7 @@ const cover = draft.data.cover ?? post?.data.hero_image;
         </figure>
       )}
 
-      <script type="application/json" data-x-markdown set:html={JSON.stringify(draft.body ?? '')} />
+      <script type="application/json" data-x-markdown set:html={JSON.stringify(markdown)} />
 
       <div class="prose prose-lg max-w-none dark:prose-invert x-body" data-x-body>
         <Content />
@@ -108,7 +140,10 @@ const cover = draft.data.cover ?? post?.data.hero_image;
 <script>
   const status = document.querySelector<HTMLElement>('[data-x-status]')!;
   const body = document.querySelector<HTMLElement>('[data-x-body]')!;
-  const figures = [...body.querySelectorAll<HTMLElement>('.pele-diagram')];
+  // Diagrams and images, in page order. Each is one `[Insert image n]`.
+  const IMAGES = '.pele-diagram, img';
+  const visual = (element: Element) => (element.matches('img') ? (element.closest('figure') ?? element) : element);
+  const figures = [...body.querySelectorAll<HTMLElement>(IMAGES)];
   const say = (text: string) => (status.textContent = text);
 
   const peleVars = [
@@ -169,8 +204,7 @@ const cover = draft.data.cover ?? post?.data.hero_image;
     }
   }
 
-  async function coverPng(figure: HTMLElement): Promise<Blob> {
-    const img = figure.querySelector('img')!;
+  async function imagePng(img: HTMLImageElement): Promise<Blob> {
     return draw(img.currentSrc || img.src, img.naturalWidth / 2, img.naturalHeight / 2, 0);
   }
 
@@ -191,10 +225,8 @@ const cover = draft.data.cover ?? post?.data.hero_image;
     }
   }
 
-  // The draft's Markdown, with each diagram fence swapped for its placeholder.
-  const source = JSON.parse(document.querySelector('[data-x-markdown]')!.textContent || '""') as string;
-  let image = 0;
-  const markdown = source.replace(/^```mermaid\n[\s\S]*?^```$/gm, () => `[Insert image ${++image}]`);
+  // Prepared at build time; see exportMarkdown in the frontmatter.
+  const markdown = JSON.parse(document.querySelector('[data-x-markdown]')!.textContent || '""') as string;
   // Markdown tables in source order, matching the rendered <table> elements.
   const tableSources = [...markdown.matchAll(/^(?:\|.*\|[ \t]*\n?)+/gm)].map((match) => match[0].trimEnd());
 
@@ -203,6 +235,7 @@ const cover = draft.data.cover ?? post?.data.hero_image;
   figures.forEach((figure, index) => {
     const n = index + 1;
     figure.classList.remove('pele-diagram-expandable');
+    const png = figure instanceof HTMLImageElement ? () => imagePng(figure) : () => diagramPng(figure);
     const actions = document.createElement('div');
     actions.className = 'x-actions not-prose';
     actions.dataset.xActions = '';
@@ -210,9 +243,9 @@ const cover = draft.data.cover ?? post?.data.hero_image;
       <button type="button" class="x-button" data-x-image="copy">Copy image</button>
       <button type="button" class="x-button" data-x-image="download">Download PNG</button>`;
     actions.querySelectorAll<HTMLButtonElement>('button').forEach((button) =>
-      button.addEventListener('click', () => handleImage(button, () => diagramPng(figure), `${slug}-${n}`)),
+      button.addEventListener('click', () => handleImage(button, png, `${slug}-${n}`)),
     );
-    figure.after(actions);
+    visual(figure).after(actions);
   });
 
   body.querySelectorAll('table').forEach((table, index) => {
@@ -231,17 +264,17 @@ const cover = draft.data.cover ?? post?.data.hero_image;
 
   const cover = document.querySelector<HTMLElement>('[data-x-cover]');
   cover?.querySelectorAll<HTMLButtonElement>('button').forEach((button) =>
-    button.addEventListener('click', () => handleImage(button, () => coverPng(cover), `${slug}-cover`)),
+    button.addEventListener('click', () => handleImage(button, () => imagePng(cover.querySelector('img')!), `${slug}-cover`)),
   );
 
   // The body as X should receive it: diagrams become placeholders, buttons are dropped.
   function exportBody(): HTMLElement {
     const copy = body.cloneNode(true) as HTMLElement;
     copy.querySelectorAll('[data-x-actions]').forEach((element) => element.remove());
-    copy.querySelectorAll('.pele-diagram').forEach((figure, index) => {
+    copy.querySelectorAll(IMAGES).forEach((figure, index) => {
       const marker = document.createElement('p');
       marker.textContent = `[Insert image ${index + 1}]`;
-      figure.replaceWith(marker);
+      visual(figure).replaceWith(marker);
     });
     copy.querySelectorAll('table').forEach((table, index) => {
       const marker = document.createElement('p');
