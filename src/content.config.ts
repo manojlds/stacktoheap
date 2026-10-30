@@ -21,4 +21,13 @@ const blog = defineCollection({
   }),
 });
 
-export const collections = { blog };
+// X Article drafts. File name matches the blog post's file name; rendered at /x/<id>/.
+const x = defineCollection({
+  loader: glob({ pattern: '**/[^_]*.{md,mdx}', base: './src/content/x' }),
+  schema: z.object({
+    title: z.string().optional(),
+    cover: z.string().optional(),
+  }),
+});
+
+export const collections = { blog, x };

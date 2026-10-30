@@ -12,9 +12,10 @@ interface Props {
   publishedTime?: Date;
   tags?: string[];
   categories?: string[];
+  noindex?: boolean;
 }
 
-const { title, description, image, article, publishedTime, tags, categories } = Astro.props;
+const { title, description, image, article, publishedTime, tags, categories, noindex } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -39,6 +40,7 @@ const { title, description, image, article, publishedTime, tags, categories } = 
       tags={tags}
       categories={categories}
     />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
   </head>
   <body>
     <div class="relative flex min-h-screen flex-col">
