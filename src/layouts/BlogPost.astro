@@ -268,6 +268,65 @@ const formattedDate = new Intl.DateTimeFormat('en-US', {
       });
     });
 
+    // Step through `%% pele: play` sequence diagrams while they are on screen.
+    // Hover or focus shows every step so the whole diagram can be read.
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const STEP_MS = 1100;
+    const HOLD_MS = 3000;
+    document.querySelectorAll<HTMLElement>('.prose .pele-play').forEach((diagram) => {
+      const total = Number(diagram.dataset.peleSteps);
+      if (reduceMotion || !total) return;
+      const steps = [...diagram.querySelectorAll<SVGGElement>('.pele-step')];
+      let at = -1;
+      let timer = 0;
+      let visible = false;
+      let held = false;
+
+      const show = (current: number, all = false) => {
+        for (const step of steps) {
+          const index = Number(step.style.getPropertyValue('--pele-step'));
+          step.classList.toggle('is-shown', all || index <= current);
+          step.classList.toggle('is-current', !all && index === current);
+        }
+        diagram.dataset.peleProgress = all ? 'Paused' : current < 0 ? '' : `Step ${current + 1} of ${total}`;
+      };
+      const tick = () => {
+        at = at + 1 >= total ? -1 : at + 1;
+        show(at);
+        timer = window.setTimeout(tick, at === total - 1 ? HOLD_MS : at < 0 ? STEP_MS / 2 : STEP_MS);
+      };
+      const stop = () => {
+        window.clearTimeout(timer);
+        timer = 0;
+      };
+      const resume = () => {
+        if (visible && !held && !timer) tick();
+      };
+      const hold = () => {
+        held = true;
+        stop();
+        show(at, true);
+      };
+      const release = () => {
+        held = false;
+        at = -1;
+        show(at);
+        resume();
+      };
+
+      diagram.classList.add('pele-play-ready');
+      show(-1);
+      diagram.addEventListener('pointerenter', hold);
+      diagram.addEventListener('pointerleave', release);
+      diagram.addEventListener('focus', hold);
+      diagram.addEventListener('blur', release);
+      new IntersectionObserver(([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible) resume();
+        else stop();
+      }, { threshold: 0.4 }).observe(diagram);
+    });
+
     dialog.querySelector('[data-media-action="close"]')?.addEventListener('click', () => dialog.close());
     dialog.querySelector('[data-media-action="zoom-in"]')?.addEventListener('click', () => zoomAt(scale * 1.25));
     dialog.querySelector('[data-media-action="zoom-out"]')?.addEventListener('click', () => zoomAt(scale / 1.25));

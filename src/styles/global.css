@@ -307,6 +307,82 @@
   box-shadow: 0 0 0 3px hsl(var(--ring) / 0.35);
 }
 
+/* Edges marked `id@{ animate: true }` in Mermaid. Tagged in pele-diagrams.ts. */
+.prose .pele-edge-animated > path:first-child {
+  stroke-dasharray: 8 4;
+  animation: pele-flow 1.2s linear infinite;
+}
+
+.prose .pele-edge-fast > path:first-child {
+  animation-duration: 0.6s;
+}
+
+.prose .pele-edge-slow > path:first-child {
+  animation-duration: 2.4s;
+}
+
+@keyframes pele-flow {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Sequence diagrams with `%% pele: play`. BlogPost.astro steps through them. */
+.prose .pele-play {
+  --pele-current: hsl(212 52% 47%);
+}
+
+.dark .prose .pele-play {
+  --pele-current: hsl(212 80% 68%);
+}
+
+.prose .pele-play-ready .pele-step {
+  transition: opacity 300ms ease;
+}
+
+.prose .pele-play-ready .pele-step:not(.is-shown) {
+  opacity: 0;
+}
+
+.prose .pele-play-ready .pele-step.is-current > path:first-child {
+  stroke: var(--pele-current);
+  stroke-width: 2.5;
+}
+
+.prose .pele-play-ready .pele-step.is-current > .pele-marker {
+  fill: var(--pele-current);
+}
+
+.prose .pele-play-ready .pele-edge-label.is-current text {
+  fill: var(--pele-current);
+  font-weight: 600;
+}
+
+.prose .pele-play-ready .pele-note.is-current > rect {
+  stroke: var(--pele-current);
+  stroke-width: 2;
+}
+
+.prose .pele-play-ready::before {
+  content: attr(data-pele-progress);
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 999px;
+  background: hsl(var(--background) / 0.92);
+  color: hsl(var(--muted-foreground));
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1rem;
+  pointer-events: none;
+}
+
 body.media-lightbox-open {
   overflow: hidden;
 }
@@ -459,5 +535,9 @@ body.media-lightbox-open {
 @media (prefers-reduced-motion: reduce) {
   .prose .pele-diagram-expandable::after {
     transition: none;
+  }
+
+  .prose .pele-edge-animated > path:first-child {
+    animation: none;
   }
 }
