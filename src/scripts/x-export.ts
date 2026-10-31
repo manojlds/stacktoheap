@@ -2,11 +2,20 @@
 // only when the URL has ?x. They copy the post as rich text or Markdown and
 // each diagram, image or the cover as a PNG; the post itself is unchanged.
 
+import { OMITTED } from '@/lib/x-export';
+
 const IMAGES = '.pele-diagram, img';
+// Left out of copies: the series box and the like (skip), interactive parts (omit).
+const SKIP = '[data-x-actions], [data-x-skip]';
+const OMIT = '[data-x-omit]';
 const PELE_VARS = [
   '--pele-bg', '--pele-fg', '--pele-fg-on-light', '--pele-fg-on-dark', '--pele-muted', '--pele-line',
   '--pele-surface', '--pele-surface-alt', '--pele-border', '--pele-accent', '--pele-critical', '--pele-error',
 ];
+
+/** The images the copies number, in page order; none inside parts the copies leave out. */
+const images = (root: Element) =>
+  [...root.querySelectorAll(IMAGES)].filter((element) => !element.closest(`${SKIP}, ${OMIT}`));
 
 /** An image is exported with its figure, if it has one. */
 const visual = (element: Element) => (element.matches('img') ? (element.closest('figure') ?? element) : element);
@@ -133,24 +142,39 @@ export function init(postId: string) {
     .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
     // Links to other posts are site-relative; give them the full address.
     .then((data: { markdown: string }) => data.markdown.replace(/\]\(\//g, `](${origin}/`));
-  // Markdown tables in source order, matching the rendered <table> elements.
+  // Markdown tables in source order, matching the rendered <table> elements. Code blocks can hold | lines too.
   const tables = markdown.then((source) =>
-    [...source.matchAll(/^(?:\|.*\|[ \t]*\n?)+/gm)].map((match) => match[0].trimEnd()),
+    [...source.replace(/^```[\s\S]*?^```/gm, '').matchAll(/^(?:\|.*\|[ \t]*\n?)+/gm)].map((match) =>
+      match[0].trimEnd(),
+    ),
   );
 
   async function saveImage(png: () => Promise<Blob>, name: string, download: boolean) {
+    const failed = `Could not make a PNG of ${name}. Screenshot it instead.`;
     if (download) {
-      const url = URL.createObjectURL(await png());
+      let url: string;
+      try {
+        url = URL.createObjectURL(await png());
+      } catch {
+        say(failed);
+        return;
+      }
       Object.assign(document.createElement('a'), { href: url, download: `${name}.png` }).click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       say(`Downloaded ${name}.png.`);
       return;
     }
+    // Safari wants the PNG as a promise, handed over while the click is still current.
+    const blob = png();
     try {
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': png() })]);
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
       say(`Copied ${name} as an image.`);
     } catch {
-      say('This browser would not copy the image. Use Download PNG instead.');
+      const made = await blob.then(
+        () => true,
+        () => false,
+      );
+      say(made ? 'This browser would not copy the image. Use Download PNG instead.' : failed);
     }
   }
   const imageButtons = (png: () => Promise<Blob>, name: string) => [
@@ -161,12 +185,17 @@ export function init(postId: string) {
   // The body as X should receive it: diagrams, images and tables become placeholders.
   function exportBody(): HTMLElement {
     const copy = body!.cloneNode(true) as HTMLElement;
-    copy.querySelectorAll('[data-x-actions], [data-x-skip]').forEach((element) => element.remove());
+    copy.querySelectorAll(SKIP).forEach((element) => element.remove());
+    copy.querySelectorAll(OMIT).forEach((element) => {
+      const marker = document.createElement('p');
+      marker.textContent = OMITTED;
+      element.replaceWith(marker);
+    });
     copy.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((link) => {
       const href = link.getAttribute('href')!;
       if (href.startsWith('/')) link.setAttribute('href', origin + href);
     });
-    copy.querySelectorAll(IMAGES).forEach((element, index) => {
+    images(copy).forEach((element, index) => {
       const marker = document.createElement('p');
       marker.textContent = `[Insert image ${index + 1}]`;
       visual(element).replaceWith(marker);
@@ -212,28 +241,30 @@ export function init(postId: string) {
   const coverImage = cover?.querySelector('img');
   if (cover && coverImage) cover.after(actions('Cover', ...imageButtons(() => imagePng(coverImage), `${postId}-cover`)));
 
-  body.querySelectorAll(IMAGES).forEach((element, index) => {
+  images(body).forEach((element, index) => {
     const n = index + 1;
     const png = element instanceof HTMLImageElement ? () => imagePng(element) : () => diagramPng(element);
     visual(element).after(actions(`Image ${n}`, ...imageButtons(png, `${postId}-${n}`)));
   });
 
-  body.querySelectorAll('table').forEach((table, index) => {
-    const n = index + 1;
-    table.after(
-      actions(
-        `Table ${n}`,
-        button('Copy as Markdown', async () => {
-          try {
-            const source = (await tables)[index];
-            say(source && (await copyText(source)) ? `Copied table ${n} as Markdown.` : `Could not copy table ${n}.`);
-          } catch {
-            say('Could not load the Markdown for this post.');
-          }
-        }),
-      ),
-    );
-  });
+  [...body.querySelectorAll('table')]
+    .filter((table) => !table.closest(OMIT))
+    .forEach((table, index) => {
+      const n = index + 1;
+      table.after(
+        actions(
+          `Table ${n}`,
+          button('Copy as Markdown', async () => {
+            try {
+              const source = (await tables)[index];
+              say(source && (await copyText(source)) ? `Copied table ${n} as Markdown.` : `Could not copy table ${n}.`);
+            } catch {
+              say('Could not load the Markdown for this post.');
+            }
+          }),
+        ),
+      );
+    });
 
   say('X export tools on.');
 }
