@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">This Post Has Tools</title>
+  <desc id="desc">A friendly robot agent on the right reaches toward a browser window on the left. The window holds tool cards with Call buttons and a JSON response, and three tool cards link the two: get_post_outline, read_section and highlight_section. Labels read: the page, registered tools, the agent.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#121c2f"/><stop offset=".6" stop-color="#121c2e"/><stop offset="1" stop-color="#11303a"/>
+    </linearGradient>
+    <radialGradient id="glowR" cx="50%" cy="50%" r="50%"><stop stop-color="#5fe0b5" stop-opacity=".18"/><stop offset="1" stop-color="#5fe0b5" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowY" cx="50%" cy="50%" r="50%"><stop stop-color="#f2b866" stop-opacity=".2"/><stop offset="1" stop-color="#f2b866" stop-opacity="0"/></radialGradient>
+    <linearGradient id="wire" x1="0" x2="1"><stop stop-color="#f2b866"/><stop offset="1" stop-color="#7fe0c0"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <g font-family="DejaVu Sans, Inter, ui-sans-serif, system-ui, sans-serif">
+    <text x="62" y="54" fill="#9fb0c6" font-size="13" font-weight="700" letter-spacing="3.2">WEBMCP, HANDS ON</text>
+    <text x="60" y="126" fill="#f6efe2" font-size="58" font-weight="800">This Post Has Tools</text>
+    <text x="62" y="168" fill="#c0cddd" font-size="21">The page gives the agent functions, not pixels.</text>
+  </g>
+
+  <!-- Ground -->
+  <ellipse cx="600" cy="500" rx="560" ry="62" fill="#0d1626" opacity=".85"/>
+
+  <!-- Browser window with a terminal -->
+  <g transform="translate(100 212)">
+    <rect width="360" height="256" rx="16" fill="#3a4a63" stroke="#8fa2bd" stroke-width="2.5"/>
+    <rect x="12" y="12" width="336" height="232" rx="10" fill="#18233a"/>
+    <circle cx="32" cy="32" r="5.5" fill="#e5736b"/><circle cx="50" cy="32" r="5.5" fill="#e9b85a"/><circle cx="68" cy="32" r="5.5" fill="#62d39b"/>
+    <rect x="88" y="24" width="244" height="16" rx="8" fill="#22304a"/>
+    <text x="100" y="36" fill="#7f93ab" font-family="DejaVu Sans Mono, ui-monospace, monospace" font-size="10.5">stacktoheap.com/blog/…/webmcp</text>
+    <g font-family="DejaVu Sans Mono, ui-monospace, monospace" font-size="12.5" font-weight="700">
+      <g transform="translate(26 54)">
+        <rect width="308" height="54" rx="8" fill="#131d2f" stroke="#7fe0c0" stroke-width="2"/>
+        <text x="14" y="22" fill="#7fc8f2">get_post_outline</text>
+        <rect x="14" y="31" width="150" height="7" rx="3.5" fill="#34465f"/>
+        <rect x="246" y="15" width="48" height="24" rx="6" fill="#163a35" stroke="#3f8f7c" stroke-width="1.5"/>
+        <text x="270" y="31.5" fill="#c9f7e7" font-size="11" text-anchor="middle">Call</text>
+      </g>
+      <g transform="translate(26 116)">
+        <rect width="308" height="54" rx="8" fill="#131d2f" stroke="#26354d" stroke-width="2"/>
+        <text x="14" y="22" fill="#7fc8f2">read_section</text>
+        <rect x="14" y="31" width="120" height="7" rx="3.5" fill="#34465f"/>
+        <rect x="246" y="15" width="48" height="24" rx="6" fill="#163a35" stroke="#3f8f7c" stroke-width="1.5"/>
+        <text x="270" y="31.5" fill="#c9f7e7" font-size="11" text-anchor="middle">Call</text>
+      </g>
+      <g transform="translate(26 178)">
+        <rect width="308" height="46" rx="8" fill="#0b1220"/>
+        <text x="14" y="20" fill="#7fe0c0" font-weight="400" font-size="11">{ "highlighted":</text>
+        <text x="14" y="36" fill="#d6e2f0" font-weight="400" font-size="11">  "what-webmcp-is" }</text>
+      </g>
+    </g>
+  </g>
+  <path d="M478 230l26-14M482 262l30 2M470 200l18-22" stroke="#8fa2bd" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+
+  <!-- Tool cards, the registered tools -->
+  <circle cx="610" cy="340" r="120" fill="url(#glowY)"/>
+  <g font-family="DejaVu Sans Mono, ui-monospace, monospace" font-size="12.5" font-weight="700">
+    <g transform="translate(528 262)">
+      <rect width="168" height="40" rx="9" fill="#f2b866" stroke="#ffd59a" stroke-width="2"/>
+      <text x="84" y="25" fill="#3a2608" text-anchor="middle">get_post_outline()</text>
+    </g>
+    <g transform="translate(528 318)">
+      <rect width="168" height="40" rx="9" fill="#2e4766" stroke="#7fa8d6" stroke-width="2"/>
+      <text x="84" y="25" fill="#dcecff" text-anchor="middle">read_section(id)</text>
+    </g>
+    <g transform="translate(528 374)">
+      <rect width="168" height="40" rx="9" fill="#2e4766" stroke="#7fa8d6" stroke-width="2"/>
+      <text x="84" y="25" fill="#dcecff" text-anchor="middle">highlight_section()</text>
+    </g>
+  </g>
+  <!-- Wires: page to tools, tools to agent -->
+  <path d="M460 340C495 340 498 282 528 282" fill="none" stroke="#f2b866" stroke-width="3"/>
+  <path d="M460 340H528" fill="none" stroke="#f2b866" stroke-width="3" opacity=".75"/>
+  <path d="M460 340C495 340 498 394 528 394" fill="none" stroke="#f2b866" stroke-width="3" opacity=".75"/>
+  <circle cx="460" cy="340" r="6" fill="#f2b866"/>
+  <path d="M696 282C760 282 770 318 835 322" fill="none" stroke="url(#wire)" stroke-width="3.5"/>
+  <circle cx="835" cy="322" r="6" fill="#7fe0c0"/>
+
+  <!-- The agent -->
+  <circle cx="930" cy="330" r="150" fill="url(#glowR)"/>
+  <g transform="translate(850 188)">
+    <line x1="80" y1="0" x2="80" y2="34" stroke="#8fa2bd" stroke-width="4"/>
+    <circle cx="80" cy="-2" r="8" fill="#7fe0c0"/>
+    <rect x="10" y="34" width="140" height="96" rx="20" fill="#a9b6cc" stroke="#d9e2ef" stroke-width="3"/>
+    <rect x="28" y="52" width="104" height="60" rx="12" fill="#18233a"/>
+    <circle cx="60" cy="78" r="7" fill="#7fe0c0"/><circle cx="100" cy="78" r="7" fill="#7fe0c0"/>
+    <path d="M66 96q14 10 28 0" fill="none" stroke="#7fe0c0" stroke-width="4" stroke-linecap="round"/>
+    <rect x="0" y="146" width="160" height="132" rx="20" fill="#9eaac2" stroke="#d9e2ef" stroke-width="3"/>
+    <rect x="22" y="166" width="116" height="62" rx="10" fill="#18233a"/>
+    <text x="80" y="204" fill="#7fe0c0" font-family="DejaVu Sans Mono, ui-monospace, monospace" font-size="17" text-anchor="middle">call()</text>
+    <circle cx="80" cy="252" r="5" fill="#7fe0c0"/>
+    <path d="M2 182C-30 186 -48 196 -62 210" fill="none" stroke="#8592ab" stroke-width="16" stroke-linecap="round"/>
+    <path d="M158 182c22 12 30 34 28 60" fill="none" stroke="#8592ab" stroke-width="16" stroke-linecap="round"/>
+    <rect x="30" y="278" width="34" height="46" rx="10" fill="#6f7d96"/>
+    <rect x="96" y="278" width="34" height="46" rx="10" fill="#6f7d96"/>
+  </g>
+
+  <g font-family="DejaVu Sans, Inter, ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="700" letter-spacing="3">
+    <text x="280" y="530" fill="#f2a7b3" text-anchor="middle">THE PAGE</text>
+    <text x="612" y="530" fill="#f2c27b" text-anchor="middle">REGISTERED TOOLS</text>
+    <text x="930" y="530" fill="#7fe0c0" text-anchor="middle">THE AGENT</text>
+  </g>
+  <text x="600" y="590" fill="#9fb0c6" font-family="DejaVu Sans, Inter, ui-sans-serif, system-ui, sans-serif" font-size="14" text-anchor="middle">document.modelContext.registerTool() — the agent calls a function, and you watch the page change.</text>
+</svg>

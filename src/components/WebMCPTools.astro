@@ -1,0 +1,160 @@
+---
+// The tools this post registers with WebMCP, as cards a reader can call.
+// The logic is in src/scripts/webmcp-tools.ts.
+---
+
+<section class="wmt not-prose" data-webmcp-tools data-x-omit aria-label="WebMCP tools on this page">
+  <header class="wmt-bar">
+    <span class="wmt-title">Tools on this page</span>
+    <span class="wmt-provider" data-webmcp-provider>Checking for WebMCP…</span>
+  </header>
+  <div class="wmt-list" data-webmcp-tool-list>
+    <p class="wmt-empty">The tools need JavaScript.</p>
+  </div>
+</section>
+
+<script>
+  import '@/scripts/webmcp-tools';
+</script>
+
+<style>
+  .wmt {
+    --wmt-bg: #0f1726;
+    --wmt-line: #26354d;
+    margin: 2rem 0;
+    border: 1px solid var(--wmt-line);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: var(--wmt-bg);
+    color: #d6e2f0;
+    box-shadow: 0 18px 40px -24px rgb(0 0 0 / 0.6);
+    font-size: 0.9rem;
+  }
+  .wmt-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 0.9rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--wmt-line);
+    background: #131d2f;
+    font-size: 0.8rem;
+  }
+  .wmt-title {
+    font-weight: 700;
+    color: #e6edf6;
+    letter-spacing: 0.02em;
+  }
+  .wmt-provider { color: #8ea3bc; }
+  .wmt-list {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+  .wmt-empty { margin: 0; color: #8ea3bc; }
+
+  .wmt-list :global(.wmt-tool) {
+    border: 1px solid var(--wmt-line);
+    border-radius: 0.6rem;
+    padding: 0.8rem 0.9rem;
+    background: #131d2f;
+  }
+  .wmt-list :global(.wmt-called) { animation: wmt-pulse 1.4s ease-out; }
+  .wmt-list :global(.wmt-tool-head) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .wmt-list :global(.wmt-tool-name) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 700;
+    color: #7fc8f2;
+  }
+  .wmt-list :global(.wmt-badge) {
+    padding: 0.05rem 0.45rem;
+    border: 1px solid #34465f;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    color: #9fb4cc;
+  }
+  .wmt-list :global(.wmt-tool-desc) {
+    margin: 0.4rem 0 0.7rem;
+    color: #b8c6d8;
+  }
+  .wmt-list :global(.wmt-controls) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .wmt-list :global(.wmt-input) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8rem;
+    color: #9fb4cc;
+  }
+  .wmt-list :global(select) {
+    max-width: 100%;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #34465f;
+    border-radius: 0.4rem;
+    background: #0f1726;
+    color: #d6e2f0;
+    font: inherit;
+  }
+  .wmt-list :global(.wmt-call) {
+    padding: 0.35rem 1rem;
+    border-radius: 0.45rem;
+    border: 1px solid #3f8f7c;
+    background: #163a35;
+    color: #c9f7e7;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .wmt-list :global(.wmt-call:hover) { background: #1d4a43; }
+  .wmt-list :global(.wmt-schema) {
+    margin-top: 0.6rem;
+    font-size: 0.78rem;
+    color: #8ea3bc;
+  }
+  .wmt-list :global(.wmt-schema summary) { cursor: pointer; }
+  .wmt-list :global(pre) {
+    margin: 0.4rem 0 0;
+    padding: 0.6rem 0.75rem;
+    max-height: 16rem;
+    overflow: auto;
+    border-radius: 0.4rem;
+    background: #0b1220;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #d6e2f0;
+  }
+  .wmt-list :global(.wmt-result) { margin-top: 0.7rem; }
+  .wmt-list :global(.wmt-meta) {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #7fe0c0;
+  }
+  .wmt-list :global([data-error='true'] .wmt-meta) { color: #f2a7b3; }
+  .wmt-list :global([data-error='true'] .wmt-result pre) { color: #f6c4cc; }
+
+  @keyframes wmt-pulse {
+    0%, 25% { border-color: #7fe0c0; box-shadow: 0 0 0 0.25rem rgb(127 224 192 / 0.2); }
+    100% { border-color: var(--wmt-line); box-shadow: 0 0 0 0.25rem transparent; }
+  }
+
+  :global(.webmcp-highlight) {
+    animation: webmcp-flash 2.4s ease-out;
+    border-radius: 0.3rem;
+  }
+  @keyframes webmcp-flash {
+    0%, 30% { background: rgb(127 224 192 / 0.28); box-shadow: 0 0 0 0.4rem rgb(127 224 192 / 0.28); }
+    100% { background: transparent; box-shadow: 0 0 0 0.4rem transparent; }
+  }
+</style>
