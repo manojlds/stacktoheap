@@ -5,11 +5,13 @@
 // writes the file back to src/content/blog, and the dev server reloads the
 // preview. Nothing here is part of a production build.
 
-import type { AstroIntegration } from 'astro';
-import type { Plugin } from 'vite';
+import type { AstroIntegration, ViteUserConfig } from 'astro';
 import { createHash } from 'node:crypto';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+
+// Vite's plugin type, taken from Astro's config so vite needn't be a direct dependency.
+type Plugin = Extract<NonNullable<ViteUserConfig['plugins']>[number], { name: string }>;
 
 const API = '/_edit/api/file';
 const hash = (text: string) => createHash('sha1').update(text).digest('hex');
