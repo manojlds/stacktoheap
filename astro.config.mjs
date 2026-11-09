@@ -4,6 +4,7 @@ import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import { satteri } from '@astrojs/markdown-satteri';
 import { peleDiagrams } from './src/plugins/pele-diagrams.ts';
+import { localEditor } from './src/integrations/local-editor/index.ts';
 
 // https://astro.build/config
 export default defineConfig({
@@ -14,7 +15,8 @@ export default defineConfig({
   // Astro 7 defaults this to 'jsx', which drops whitespace between inline
   // elements. `true` keeps the Astro 5 HTML-aware compression.
   compressHTML: true,
-  integrations: [mdx(), sitemap()],
+  // localEditor adds /_edit under `astro dev` only.
+  integrations: [mdx(), sitemap(), localEditor()],
   markdown: {
     processor: satteri({
       hastPlugins: [peleDiagrams],

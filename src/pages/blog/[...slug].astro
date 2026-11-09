@@ -12,7 +12,8 @@ function postUrl(post: { id: string; data: { date: Date } }) {
 }
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  // Drafts get a page under `astro dev`, so they can be previewed and edited.
+  const posts = await getCollection('blog', ({ data }) => import.meta.env.DEV || !data.draft);
 
   return posts.map((post) => {
     const { date } = post.data;

@@ -1,0 +1,145 @@
+---
+import { editablePosts, type EditablePost } from './posts';
+
+export async function getStaticPaths() {
+  return (await editablePosts()).map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props as { post: EditablePost };
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content" />
+    <title>Edit: {post.title}</title>
+  </head>
+  <body data-file={post.file} data-url={post.url} data-view="edit">
+    <header class="bar">
+      <a class="back" href="/_edit" aria-label="All posts">←</a>
+      <span class="name" title={post.file}>{post.title}</span>
+      <span class="status" data-status>Loading…</span>
+      <button type="button" class="save" data-save disabled>Save</button>
+    </header>
+    <nav class="tabs" aria-label="View">
+      <button type="button" data-tab="edit" aria-pressed="true">Edit</button>
+      <button type="button" data-tab="preview" aria-pressed="false">Preview</button>
+    </nav>
+    <div class="notice" data-notice hidden></div>
+    <main>
+      <textarea data-source spellcheck="true" autocapitalize="sentences" aria-label="Post source" disabled></textarea>
+      <iframe data-preview title="Preview" src={post.url}></iframe>
+    </main>
+  </body>
+</html>
+
+<script>
+  import './editor';
+</script>
+
+<style>
+  :global(html), :global(body) { height: 100%; }
+  :global(body) {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    font-family: system-ui, sans-serif;
+    background: #fff;
+    color: #1d2330;
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e3e3df;
+    background: #f7f7f5;
+  }
+  .back {
+    font-size: 1.3rem;
+    line-height: 1;
+    padding: 0.2rem 0.4rem;
+    color: #3a6ea5;
+    text-decoration: none;
+  }
+  .name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .status { font-size: 0.8rem; color: #6b7280; white-space: nowrap; }
+  :global(body[data-dirty='true']) .status { color: #b45309; }
+  .save {
+    padding: 0.45rem 1rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: #1f6f5c;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .save:disabled { background: #a7b8b2; }
+  .tabs { display: none; }
+  .notice {
+    padding: 0.6rem 0.75rem;
+    background: #fdf0d5;
+    color: #6b4500;
+    font-size: 0.85rem;
+  }
+  .notice :global(button) {
+    margin: 0.4rem 0.5rem 0 0;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid #c79a4a;
+    border-radius: 0.4rem;
+    background: #fff;
+  }
+  main {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  textarea {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 1rem;
+    border: 0;
+    border-right: 1px solid #e3e3df;
+    resize: none;
+    outline: none;
+    font: 15px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: inherit;
+    background: #fff;
+  }
+  iframe { width: 100%; height: 100%; border: 0; }
+
+  /* Phones: one pane at a time, switched with tabs. */
+  @media (max-width: 900px) {
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e3e3df;
+    }
+    .tabs button {
+      flex: 1;
+      padding: 0.55rem;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      background: #f7f7f5;
+      font-size: 0.95rem;
+      color: #6b7280;
+    }
+    .tabs button[aria-pressed='true'] { border-bottom-color: #1f6f5c; color: #1d2330; font-weight: 600; }
+    main { grid-template-columns: 1fr; }
+    textarea { border-right: 0; font-size: 16px; padding: 0.75rem; }
+    :global(body[data-view='edit']) iframe { display: none; }
+    :global(body[data-view='preview']) textarea { display: none; }
+  }
+</style>
