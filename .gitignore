@@ -26,3 +26,6 @@ pnpm-debug.log*
 
 # VS Code
 .vscode/
+
+# python
+__pycache__/
