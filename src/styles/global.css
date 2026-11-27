@@ -177,6 +177,11 @@
   content: "";
 }
 
+/* Long inline code (paths, URIs) wraps instead of widening the page on phones. Code blocks still scroll. */
+.prose :where(:not(pre) > code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  overflow-wrap: anywhere;
+}
+
 .prose-lg :where(h1):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
   margin-top: 2.5rem;
   margin-bottom: 1rem;
