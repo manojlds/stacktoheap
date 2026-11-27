@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Skills over MCP: Two Competitors Meet</title>
+  <desc id="desc">On the left, a skill folder holds SKILL.md, a scripts folder and a reference file. On the right, an MCP server rack with a plug. Between them, the word "vs" is struck through and replaced with "over". A dashed link runs from the folder to the server, carrying the labels skills/list, skills/get and a sha256 digest, showing the skill being served by the MCP server.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#121c2f"/><stop offset=".6" stop-color="#121c2e"/><stop offset="1" stop-color="#11303a"/>
+    </linearGradient>
+    <radialGradient id="glowT" cx="50%" cy="50%" r="50%"><stop stop-color="#7fe0c0" stop-opacity=".18"/><stop offset="1" stop-color="#7fe0c0" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB" cx="50%" cy="50%" r="50%"><stop stop-color="#7fc8f2" stop-opacity=".18"/><stop offset="1" stop-color="#7fc8f2" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowA" cx="50%" cy="50%" r="50%"><stop stop-color="#f7c56b" stop-opacity=".3"/><stop offset="1" stop-color="#f7c56b" stop-opacity="0"/></radialGradient>
+    <linearGradient id="link" x1="0" x2="1"><stop stop-color="#7fe0c0"/><stop offset=".5" stop-color="#f7c56b"/><stop offset="1" stop-color="#7fc8f2"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <g font-family="DejaVu Sans, Inter, ui-sans-serif, system-ui, sans-serif">
+    <text x="62" y="54" fill="#9fb0c6" font-size="13" font-weight="700" letter-spacing="3.2">THE MCP SKILLS EXTENSION</text>
+    <text x="60" y="108" fill="#f6efe2" font-size="50" font-weight="800">Skills over MCP: <tspan fill="#f7c56b">Two Competitors Meet</tspan></text>
+    <text x="62" y="150" fill="#c0cddd" font-size="21">A folder of markdown, served by a server, loaded as a real skill.</text>
+  </g>
+
+  <!-- Ground -->
+  <ellipse cx="600" cy="560" rx="560" ry="44" fill="#0d1626" opacity=".85"/>
+
+  <!-- The skill folder -->
+  <circle cx="250" cy="390" r="210" fill="url(#glowT)"/>
+  <path d="M90 250h96l22 24h192a14 14 0 0 1 14 14v212a14 14 0 0 1-14 14H90a14 14 0 0 1-14-14V264a14 14 0 0 1 14-14z" fill="#16233a" stroke="#7fe0c0" stroke-width="2.5"/>
+  <text x="104" y="270" fill="#bff3e1" font-family="DejaVu Sans Mono, ui-monospace, monospace" font-size="13" font-weight="700">pdf/</text>
+  <g font-family="DejaVu Sans Mono, ui-monospace, monospace" font-size="15">
+    <rect x="102" y="298" width="290" height="48" rx="10" fill="#12303a" stroke="#7fe0c0" stroke-width="2"/>
+    <path d="M118 310h18l8 8v20h-26z" fill="none" stroke="#7fe0c0" stroke-width="2" stroke-linejoin="round"/>
+    <text x="156" y="328" fill="#e8fbf4" font-weight="700">SKILL.md</text>
+    <text x="378" y="328" fill="#7fbfa9" font-size="12" text-anchor="end">name, description</text>
+    <rect x="102" y="356" width="290" height="40" rx="10" fill="#1c2940" stroke="#4a5a76" stroke-width="2"/>
+    <text x="122" y="382" fill="#a9b6cc">scripts/fill_fields.py</text>
+    <rect x="102" y="406" width="290" height="40" rx="10" fill="#1c2940" stroke="#4a5a76" stroke-width="2"/>
+    <text x="122" y="432" fill="#a9b6cc">reference.md</text>
+    <text x="122" y="478" fill="#5f6f89" font-size="13">--- name: pdf ---</text>
+  </g>
+  <text x="250" y="586" fill="#7fe0c0" font-family="DejaVu Sans, Inter, sans-serif" font-size="13" font-weight="700" letter-spacing="3" text-anchor="middle">SKILLS</text>
+
+  <!-- The MCP server -->
+  <circle cx="950" cy="390" r="210" fill="url(#glowB)"/>
+  <g>
+    <rect x="800" y="262" width="300" height="74" rx="14" fill="#16233a" stroke="#7fc8f2" stroke-width="2.5"/>
+    <rect x="800" y="350" width="300" height="74" rx="14" fill="#16233a" stroke="#7fc8f2" stroke-width="2.5"/>
+    <rect x="800" y="438" width="300" height="74" rx="14" fill="#16233a" stroke="#7fc8f2" stroke-width="2.5"/>
+    <g fill="#7fe0c0"><circle cx="830" cy="299" r="6"/><circle cx="830" cy="387" r="6"/><circle cx="830" cy="475" r="6"/></g>
+    <g fill="#4a5a76"><circle cx="852" cy="299" r="6"/><circle cx="852" cy="387" r="6"/><circle cx="852" cy="475" r="6"/></g>
+    <g stroke="#3a4862" stroke-width="5" stroke-linecap="round"><path d="M1000 299h74M1000 387h74M1000 475h74"/></g>
+    <g font-family="DejaVu Sans Mono, ui-monospace, monospace" font-size="14" font-weight="700" fill="#cfe9fb">
+      <text x="876" y="304">skills/list</text>
+      <text x="876" y="392">skills/get</text>
+      <text x="876" y="480">resources</text>
+    </g>
+  </g>
+  <!-- plug -->
+  <g transform="translate(1120 368)" stroke="#7fc8f2" stroke-width="4" stroke-linecap="round" fill="none">
+    <path d="M0 20h22"/><rect x="22" y="6" width="26" height="28" rx="6" fill="#15283d"/><path d="M48 13h12M48 27h12"/>
+  </g>
+  <text x="950" y="586" fill="#7fc8f2" font-family="DejaVu Sans, Inter, sans-serif" font-size="13" font-weight="700" letter-spacing="3" text-anchor="middle">MCP</text>
+
+  <!-- vs → over -->
+  <circle cx="606" cy="258" r="70" fill="url(#glowA)"/>
+  <g font-family="DejaVu Sans, Inter, sans-serif" font-weight="800" text-anchor="middle">
+    <text x="606" y="236" fill="#5f6f89" font-size="34">vs</text>
+    <path d="M580 228l52-6" stroke="#e5736b" stroke-width="5" stroke-linecap="round"/>
+    <text x="606" y="290" fill="#f7c56b" font-size="40">over</text>
+  </g>
+
+  <!-- The link: the skill, served -->
+  <path d="M418 400C520 340 690 340 790 400" fill="none" stroke="url(#link)" stroke-width="3.5" stroke-dasharray="3 10" stroke-linecap="round"/>
+  <path d="M776 388l16 13-20 4" fill="none" stroke="#7fc8f2" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g font-family="DejaVu Sans Mono, ui-monospace, monospace" font-size="12" font-weight="700" text-anchor="middle">
+    <rect x="470" y="388" width="272" height="28" rx="14" fill="#3a2e14" stroke="#f7c56b" stroke-width="1.5"/>
+    <text x="606" y="407" fill="#ffe2a8">skill://pdf/SKILL.md</text>
+    <rect x="496" y="428" width="220" height="26" rx="13" fill="#15283d" stroke="#4a5a76" stroke-width="1.5"/>
+    <text x="606" y="446" fill="#a9b6cc">sha256:d1c7caf5…</text>
+  </g>
+</svg>
